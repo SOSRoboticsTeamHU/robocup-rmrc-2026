@@ -1,0 +1,9 @@
+# RoboCupRescue RMRC 2026 - Jetson (Robot Brain)
+# Install: pip3 install -r jetson/requirements.txt
+
+# PyTorch on Jetson is built against NumPy 1.x - use numpy<2 to avoid crashes
+numpy<2
+
+# Camera troubleshooting:
+# - MJPEG not-negotiated? Try: GST_MJPEG_RESOLUTION=640x480 (if cam only does 640x480 MJPEG)
+# - Still failing? Use raw fallback: GST_USE_RAW_CAMERA=1

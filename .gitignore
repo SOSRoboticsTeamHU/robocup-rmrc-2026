@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# IDE / editor
+.idea/
+.vscode/
+.cursor/
+*.swp
+*.swo
+*~
+
+# Backup / temp
+*.backup
+*.bak
+
+# Runtime
+*.log
+logs/
+jetson/logs/
+jetson/deepstream/outputs/
+
+# YOLO / ML - large files (download or export on device)
+.pt
+runs/
+jetson/yolov8n.pt
+jetson/models/engines/*.pt
+jetson/models/engines/*.onnx
+jetson/models/engines/*.whl
+jetson/models/engines/*.tar.xz
+jetson/models/engines/cudnn-linux-sbsa-*/
+jetson/models/engines/torchvision/
+
+# Keep small engine files in repo (optional: add *.engine to ignore and document)
+jetson/models/engines/*.engine
+
+# C++ / CMake
+jetson/drive_bridge_cpp/build/
+**/CMakeFiles/
+**/*.o
+**/*.a
+**/*.so
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports output
+mission_report.pdf
+reports/*.pdf
+
+# Optional: uncomment to ignore QR log (rulebook says write to file for judges)
+reports/mission_qr_codes.txt
+
+# TDP template
+RoboCupRescue_TDP_Template_2026/
+
+# Secrets / env (do not commit)
+.env
+.env.local
+.env.*.local
+!.env.example
+*.key
+*.pem

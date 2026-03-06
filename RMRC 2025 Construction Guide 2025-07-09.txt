@@ -1,0 +1,804 @@
+﻿RoboCupRescue Rapidly Manufactured Robot Challenge (RMRC) 2025 Arena Construction Guide
+THIS IS THE CURRENT VERSION
+Last updated 2025-07-09 
+Introduction
+This document describes the purchase and construction requirements for the 2025 RoboCupRescue Rapidly Manufactured Robot Challenge (RMRC) Arena. 
+Common specifications
+* All timber is assumed to be 38x75 mm (±3 mm) in cross-section unless otherwise stated. 
+* All OSB panels are assumed to be 15 mm (±3 mm) thick. 
+* All polycarbonate sheets are assumed to be 5 mm (±1 mm) thick. 
+* All dimensions should be within 3 mm of specified unless otherwise noted. 
+* All angles should be within 2º of specified unless otherwise noted. 
+* If the standard sizes of raw materials in the region where the arena is to be built do not match these measurements (especially timber), the builder may elect to substitute the closest standard-sized raw materials. This will require some cuts to be altered so that critical dimensions (indicated in the instructions for each apparatus) are maintained. 
+* Screws and fastener quantities are not included. 
+________________
+Table of Contents
+
+
+Introduction        1
+Common specifications        1
+Table of Contents        2
+Apparatus Common Components        3
+30 cm Z-Pallets (4 required)        4
+60 cm Z-pallets (2 required)        8
+K-Rail panels (12 required)        11
+15º Ramps (40 required)        13
+50 mm 15º Ramps (16 required)        15
+100 mm 15º Ramps (16 required)        17
+60 cm U-Walls (5 required)        19
+Bricks for Stairs and Align        21
+Apparatuses        23
+Incline and Center apparatus (1 required)        24
+L-wall for additional maze (4 required)        27
+30 cm Sand and Gravel apparatus and slope wedges (1 required)        28
+30 cm Ramps on Crossover Slope apparatus and slope wedges (1 required)        32
+60 cm K-Rail Apparatus, Slope Wedges, and Negotiate Obstacles (1 required)        36
+Hurdle Terrain apparatus (1 required)        41
+Mapping fiducials (6 required)        47
+QR codes (5 sets required)        49
+Sensor crates and door (3 required)        51
+Linear rail dexterity apparatus and manipulation objects (2 required)        56
+Keyboard Omni        58
+Additional parts to convert arena to finals configuration        60
+Other Items to Rent or Purchase        62
+Televisions:        62
+Sound system:        62
+Score board:        63
+Tables and chairs        64
+IT equipment        64
+Change log        65
+2025-07-09: Switched to RoboCup Cloud for links.        65
+2025-06-24: Edited crate specifications.        65
+2025-06-20: Published reference version.        65
+
+
+________________
+Apparatus Common Components
+The parts described in this section are common components that are referenced in subsequent apparatus descriptions. The quantities described in the headings are the total required for the entire arena. 
+________________
+30 cm Z-Pallets (4 required)
+  
+          
+                            
+Parts to cut: 
+NOTE: To reduce cost, polycarbonate panels mentioned may be replaced with thin OSB or plywood but visibility in public competition settings will be reduced.
+1. 4x 1200 mm beams 
+   1. May be up to 3 mm longer but may not be shorter. 
+  
+
+2. 4x 224 mm beams 
+   1. May be up to 3 mm longer but may not be shorter. 
+   2. Length will need to be adjusted if the short dimension of the beams is not 38 mm. They should fit between the 1200 mm beams such that the total width is 300 mm. 
+  
+
+3. 2x 1200x300 mm panels
+  
+
+4. 6x 300x300 mm polycarbonate sheets drilled with 5mm holes as shown
+  
+
+5. 2x 300x600 mm polycarbonate sheets drilled with 5mm holes as shown
+  
+
+6. 2x 300x900 mm polycarbonate sheets drilled with 5mm holes as shown
+  
+
+Pre-assemble: 
+1. Assemble parts 1, 2, and 3 into two half-pallets. 
+  
+ x2
+Assemble on-site: 
+1. Screw half-pallets together. Recommend using at least 3x 70 mm screws. 
+  
+
+2. Turn over and attach polycarbonate walls with washer-head screws through the pre-drilled holes. 
+   1. Bottoms of walls should be flush with, or up to 10 mm above, the ground (ensure that the weight of the pallet is not resting on the bottoms of the walls). 
+   2. Some corners may need to overlap as shown. 
+  
+
+A:        B:      All others:   
+________________
+Critical dimensions: 
+Alternative construction materials and techniques may be used as long as the design is adjusted to maintain the following dimensions: 
+* The inner dimensions of each half-pallet are between 300 x 1,200 mm and 305 x 1,205 mm. 
+* The height of the walls above the top surface of the pallets is between 200 mm and 300 mm. 
+* The Z-pallet is assembled so that the end of one pallet lines up with the centerline of the other pallet to within 5 mm. 
+________________
+60 cm Z-pallets (2 required)
+  
+  
+
+  
+                          
+Parts to cut: 
+1. 4x 2400 mm beams
+   1. May be up to 3 mm longer but may not be shorter. 
+  
+
+2. 4x 524 mm beams 
+   1. May be up to 3 mm longer but may not be shorter. 
+   2. Length will need to be adjusted if the short dimension of the beams is not 38 mm. They should fit between the 2400 mm beams such that the total width is 600 mm. 
+  
+
+3. 2x 2400x600 mm panels
+  
+
+4. 6x 600x600 mm OSB sheets
+5. 2x 600x1200 mm OSB sheets
+6. 2x 600x1800 mm OSB sheets
+Pre-assemble: 
+1. Assemble parts 1, 2, and 3 into two half-pallets. 
+  
+x2
+Assemble on-site: 
+1. Screw half-pallets together. Recommend using at least 3x 70 mm screws. 
+  
+
+2. Turn over and attach OSB walls with washer-head screws, at least one every 500 mm. Bottoms of walls should be flush with, or up to 10 mm above, the ground (ensure that the weight of the pallet is not resting on the bottoms of the walls). Overlap corners as for the 30 cm Z-pallets. 
+  
+
+Critical dimensions: 
+Alternative construction materials and techniques may be used as long as the design is adjusted to maintain the following dimensions: 
+* The inner dimensions of each half-pallet are between 600 x 2,400 mm and 610 x 2,410 mm. 
+* The height of the walls above the top surface of the pallets is between 400 mm and 600 mm. 
+* The Z-pallet is assembled so that the end of one pallet lines up with the centerline of the other pallet to within 10 mm. 
+________________
+
+
+
+
+K-Rail panels (12 required)
+  
+  
+
+  
+  
+
+Parts to cut: 
+1. 1x 600x1200 mm OSB sheet
+2. 2x 849 mm beams with ends cut as shown
+  
+
+Pre-assemble: 
+1. Assemble parts 1 and 2 as shown with at least 2 screws per beam. 
+  
+________________
+
+Critical dimensions: 
+* The OSB sheet must be as specified. 
+* The beams may be between 30 x 70 mm and 40 x 80 mm in cross-section and must be cut to fit together as shown. 
+________________
+15º Ramps (40 required)
+  
+  
+
+  
+  
+
+Parts to cut: 
+1. 1x 150x150 mm OSB sheet
+2. 2x 39 mm beams cut as shown. If the beams are not 75 mm in long cross-sectional dimension, adjust the 19 mm end so that the angle marked is 105º. 
+  
+
+Pre-assemble: 
+1. Assemble parts 1 and 2 as shown with glue and at least 1 screw per beam. 
+  
+________________
+
+Critical dimensions: 
+* Ramps may be constructed with alternative thicknesses of sheet and alternative beams as long as the top surface is OSB at 15 degrees, the low end of the ramp is as low as is possible given the thickness of the OSB sheet, and has a footprint of 150 x 150 mm to within 5 mm. The thickness of the OSB sheet will dictate the overall height. 
+________________
+50 mm 15º Ramps (16 required)
+  
+                  
+  
+          
+Parts to cut: 
+1. 1x 150x150 mm OSB sheet
+2. 2x OSB sheets cut as shown
+  
+
+3. 2x 89 mm beams cut as shown. If the beams are not 75 mm in long cross-sectional dimension, adjust the 69 mm end so that the angle marked is 105º. 
+  
+
+Pre-assemble: 
+1. Assemble parts 2 and 3 as shown with glue and screws. 
+  
+
+2. Assemble with part 1 as shown with glue and screws. 
+  
+
+Critical dimensions: 
+Ramps may be constructed with alternative thicknesses of sheet and alternative beams as long as the top surface is OSB at 15 degrees, the ramp is 50 mm above the (plain) 15º ramp to within 5 mm, and has a footprint of 150 x 150 mm to within 5 mm. The thickness of the OSB sheet will dictate the overall height. 
+________________
+
+
+100 mm 15º Ramps (16 required)
+  
+                  
+  
+          
+Parts to cut: 
+1. 1x 150x150 mm OSB sheet
+2. 2x OSB sheets cut as shown
+  
+
+3. 2x 139 mm beams cut as shown. If the beams are not 75 mm in long cross-sectional dimension, adjust the 119 mm end so that the angle marked is 105º. 
+  
+
+Pre-assemble: 
+3. Assemble parts 2 and 3 as shown with glue and screws. 
+  
+
+4. Assemble with part 1 as shown with glue and screws. 
+  
+
+Critical dimensions: 
+Ramps may be constructed with alternative thicknesses of sheet and alternative beams as long as the top surface is OSB at 15 degrees, the ramp is 100 mm above the (plain) 15º ramp to within 5 mm, and has a footprint of 150 x 150 mm to within 5 mm. The thickness of the OSB sheet will dictate the overall height. 
+________________
+
+
+60 cm U-Walls (5 required)
+  
+          
+  
+                  
+        
+Parts to cut and obtain: 
+1. 1x 1200x600 mm OSB sheet
+2. 2x 600x600 mm OSB sheets
+3. 4x Door hinges (approx. 80-120mm) and short screws or bolts suitable for 15 mm OSB
+
+
+Pre-assemble: 
+1. Use hinges to attach panels together as shown above, and so it can open and close as shown below. Hinges should be approx. 100 mm from the top and bottom. 
+  
+________________
+
+Critical dimensions: 
+* OSB sheets may be of any thickness necessary to maintain rigidity. Other dimensions should be as specified. 
+________________
+Bricks for Stairs and Align
+  
+
+Parts to obtain: 
+1. 30x bricks as shown above. Top surface as shown must be solid, other surfaces may have holes. Double-up bricks if necessary to achieve these dimensions. 
+2. Yellow spraypaint (or other light colour that highly contrasts with the brick). 
+3. Masking tape and paper. 
+4. Black marker with 2 mm tip. 
+Pre-assemble: 
+1. On FOUR (4) of the bricks, use masking tape, paper, and spraypaint to mark a line as shown. Then use the black marker to mark the centerline as shown. 
+  ________________
+Critical dimensions: 
+All dimensions should be within those specified in the diagram above. 
+________________
+Apparatuses
+This section describes the apparatuses for the individual tests. They make use of the common components described above, plus some additional apparatus-specific components. 
+________________
+Incline and Center apparatus (1 required)
+  
+  
+
+Parts to purchase and cut: 
+1. 2x large binder clips, with a depth of at least 30 mm and a capacity of at least 25 mm.
+  
+
+2. 1x Approx. 50 mm beam.
+3. 1x 600x200 mm panel.
+4. 1x 300x200 mm panel.
+5. 4x 600 mm beams. 
+6. 1x 30 cm Z-Pallet (see common components section).
+Pre-assemble: 
+1. Pre-assemble 30 cm Z-Pallet (see common components section).
+Assemble on-site: 
+1. Assemble 30 cm Z-Pallet (see common components section). 
+2. Screw 600 mm beams to the wooden beams of the Z-Pallet at the approximate locations indicated so that the overall pallet forms an angle of 15º to the ground. This corresponds to the raised end of the pallet being approximately 468 mm above the ground. Use two screws per beam so that they do not rotate. It may be necessary to drill additional holes in the polycarbonate walls in-situ for the second screw so they do not crack. 
+
+
+
+
+  
+  
+  
+
+
+
+3. Assemble parts 1, 2, and 3 into L-wall as shown. 
+  
+
+4. Clip L-wall to an assembled 30 cm Z-Pallet with large binder clips. Wall should be adjusted for each robot such that the gap is 120% of the diagonal width (D) of the robot. 
+  
+                  
+Critical dimensions: 
+Beams may be of any cross-section as long as they are strong enough to hold the ramps in the specified positions. 
+________________
+L-wall for additional maze (4 required)
+  
+
+Parts to purchase and cut: 
+1. 2x Approx. 50 mm beams.
+2. 2x 600x600 mm panels.
+Assemble on-site: 
+1. Screw together as shown.
+Critical dimensions: 
+* Panels may be of any thickness as long as they are strong enough to stand up when assembled as shown. 
+* Beams may be of any dimension as long as they are sufficient to hold the panels as shown. 
+* Panels must be cut to the dimensions specified to within 5 mm. 
+________________
+30 cm Sand and Gravel apparatus and slope wedges (1 required)
+  
+
+  
+                  
+  
+          
+Parts to purchase and cut: 
+1. 2x 300x600 mm panels. 
+2. 4x 155 mm beams, angled as shown. If the beam is not 75 mm wide, adjust the 135 mm side so that the angle indicated stays at 105º. 
+  
+
+3. 2x 213x411x411 mm triangular panels as shown. 
+  
+
+4. 1x Approx. 250x100 mm panel (for smoothing sand and gravel). 
+5. Approx. 20 liters of clean sand (e.g. sand suitable for childrens’ sandpits). 
+6. Approx. 20 liters of clean pea gravel (particles approx. 5 mm - 10 mm in diameter). 
+7. Adhesive tape, approx. 50 mm wide, suitable for adhering to both the polycarbonate walls and the OSB sheets. 
+8. 1x 30 cm Z-Pallet (see common components section).
+Pre-assemble: 
+1. Pre-assemble 30 cm Z-Pallet (see common components section).
+2. Pre-assemble the two Sand and Gravel slope wedges. 
+   1. Secure parts 1 and 2 as shown (x2).
+  
+ x2
+   2. Secure part 3 as shown (x2). Note 10 mm gap indicated between bottom of part 3 and the end of part 2. 
+  
+ x2
+Assemble on-site: 
+1. Assemble 30 cm Z-Pallet (see common components section). 
+2. Place the two pre-assembled slope wedges into the Z-pallet as shown. Note the overlapping, nested triangles in the middle. 
+  
+
+3. Secure to the base pallet with screws. Use additional screws to secure polycarbonate walls to the legs (part 2). 
+4. Use tape to seal all joins in the polycarbonate walls and along the base pallets and the slope wedges. 
+5. Fill one side to a depth of approx. 50 mm with sand, and the other side to a depth of approx. 50 mm with gravel. Smooth with the 250 mm panel (part 4). 
+  
+
+Critical dimensions: 
+Any specification of panel and beams may be used as long as: 
+* The ramp surfaces must be at 15º. 
+* The two ramps must fit within the apparatus as shown. 
+* The ramps are strong enough to support 5 kg of weight in their centers without deflecting by more than 10 mm. 
+* The center partition extends between 50 mm and 60 mm from the top surfaces of the ramps. 
+* The center partition is no more than 25 mm thick in total. 
+________________
+30 cm Ramps on Crossover Slope apparatus and slope wedges (1 required)
+  
+
+  
+                  
+  
+          
+Parts to cut: 
+1. 2x 300x600 mm panels. 
+2. 4x 155 mm beams, angled as shown. If the beam is not 75 mm wide, adjust the 135 mm side so that the angle indicated stays at 105º. 
+  
+
+3. 2x 130x252x252 mm triangular panels as shown. 
+  
+
+4. 32x 15º Ramps (see common components section). 
+5. 1x 30 cm Z-Pallet (see common components section).
+Pre-assemble: 
+1. Pre-assemble 30 cm Z-Pallet (see common components section).
+2. Pre-assemble 15º Ramps (see common components section). 
+3. Pre-assemble the Crossover Slope wedges. 
+   1. Secure parts 1 and 2 as shown (x2).
+  
+ x2
+   2. Secure part 3 as shown (x2). Note 66 mm gap indicated between bottom of part 3 and the end of part 2. 
+  
+x2
+Assemble on-site: 
+1. Assemble 30 cm Z-Pallet (see common components section). 
+2. Place the two pre-assembled Crossover Slope wedges into the Z-pallet as shown. Do not screw them down, they should be removable. 
+  
+
+3. Place ramps in the Z-pallet. Do not secure them down, they should be loose and able to move. 
+   1. Continuous (initial configuration, first day): 
+  
+
+  
+
+   2. Pinwheel (crossing) ramps (advanced configuration, second and/or third day): 
+      1. Each ramp in a group of 4 faces 90 degrees from the other. 
+  
+
+  
+
+Critical dimensions: 
+As for the 30 cm Sand and Gravel apparatus except that the center partition must clear the ramps. 
+________________
+60 cm K-Rail Apparatus, Slope Wedges, and Negotiate Obstacles (1 required)
+  
+
+Slope Wedges: 
+  
+                  
+  
+  
+x2
+
+
+Negotiate Obstacles: 
+  
+x4
+
+
+
+
+        
+Parts to cut: 
+1. 4x 307 mm beams, angled as shown. If the beam is not 75 mm wide, adjust the 286 mm side so that the angle indicated stays at 105º. 
+  
+
+2. 4x 163 mm beams, angled as shown. If beam is not 75 mm wide, adjust the 143 mm side so that the angle indicated stays at 105º. 
+  
+
+3. 4x 1144x307x1184 mm triangular panels as shown. 
+  
+
+4. 2x 307x570 mm panels. 
+5. 4x 636 mm beams cut as shown. 
+  
+
+6. 4x 344 mm beams cut as shown. 
+  
+
+7. 4x K-Rail panels (see common components section). 
+8. 1x 60 cm Z-Pallet (see common components section).
+Pre-assemble: 
+1. Pre-assemble 60 cm Z-Pallet (see common components section).
+2. Pre-assemble K-Rail panels (see common components section). 
+3. Pre-assemble the K-Rail Slope wedge sides. 
+   1. Secure parts 1, 2, and 3 as shown with screws. Note that two are mirror images.
+  
+x2
+4. Pre-assemble the Negotiate obstacles. 
+   1. Secure parts 5 and 6 as shown with screws. 
+  
+x4
+
+
+
+
+
+
+Assemble on-site: 
+4. Assemble 60 cm Z-Pallet (see common components section). 
+5. Day 1 - Flat (easy) configuration: 
+   1. Place the K-Rail panels into the 60 cm Z-Pallet as shown. Set aside the other components listed. NOTE: Direction of K-Rail panels is still being decided. This does not affect the parts required. 
+  
+
+6. Day 2 and/or Day 3 - Crossover slope (hard) configuration: 
+   1. Secure part 4 to the K-Rail Slope wedge sides as shown with screws (x2).
+  
+x2  
+   2. Secure the center two K-Rail panels (part 5) as shown with screws (x2). Note direction of the K-Rail panel relative to the slope is still being decided. 
+  
+x2
+   3. Place the two K-Rail Crossover Slope wedges into the Z-pallet as shown. 
+  
+
+   4. Secure the Negotiate obstacles in the locations shown with screws. 
+  
+
+  
+  
+
+Critical dimensions: 
+* Alternative methods of construction and mounting of the Negotiate obstacles is acceptable as long as the lower surface of the Negotiate obstacles must be in the position shown relative to the top of the K-rail beams. 
+* Alternative methods of supporting the K-rail ramps are acceptable as long as they hold the K-rail ramps at 15º, the void under the ramps is blocked, and the ramps can hold a weight of at least 10 kg in their centers without deflecting by more than 20 mm. 
+________________
+Hurdle Terrain apparatus (1 required)
+  
+
+Hurdle Pallets: 
+  
+  
+x2
+
+
+Notched Hurdle Pallets: 
+  
+  
+x4
+
+
+Parts to purchase and cut: 
+1. 60x 35 mm beams. If OSB panels are not 15 mm thick, adjust length so that the thickness of OSB plus the length of the beam adds up to 50 mm. 
+2. 2x 600x600 mm panels, holes drilled as shown. 
+  
+x2
+3. 4x 600x600 mm panels, notched and 10 mm diameter holes drilled as shown. 
+  
+x4
+4. 12x 550 mm long, 50 mm diameter PVC pipes. 
+5. 1x 600 mm long, 85x85 mm (±10 mm) beam. 
+   1. Alternatively, two 600 mm long 38x75 mm beams screwed together. 
+6. 24x heavy duty zip ties, at least 300 mm in length (+ spares). 
+Pre-assemble: 
+1. Assemble the 2 Hurdle Pallets. Note orientation of beams relative to holes. 
+  
+x2
+2. Assemble the 4 Notched Hurdle Pallets. Note orientation of beams relative to holes. 
+  
+x4
+
+
+
+
+
+
+Assemble on-site: 
+1. Assemble 60 cm Z-Pallet (see common components section). 
+2. Loosely secure pipes to each end of the two Hurdle Pallets using zip ties through the holes. The pipes should be able to rotate and move up and down slightly. The tails of the zip ties should be underneath the pallet. 
+  
+
+3. Loosely secure pipes to the two sides of the four Notched Hurdle Pallets, either side of the notch, using zip ties through the holes. The pipes should be able to rotate and move up and down slightly. The tails of the zip ties should be underneath the pallet. 
+  
+
+4. Secure the 600 mm, 85x85 mm beam to the middle of the 60 cm Z-Pallet, either by screwing from underneath or by screwing at an angle (“toenailing” or “pocket holing”) from above. Brackets may also be used as long as they do not affect the fit of the notched pallets. 
+  
+
+5. Place 2 Hurdle and 2 Notched Hurdle Pallets into the 60 cm Z-Pallet as shown and secure with screws. 
+  
+
+  
+
+6. Screw remaining two 35 mm beams into the locations shown. These retain the pipes when the 2 additional Notched Hurdle Pallets are installed. 
+  
+
+7. Day 1 - Low (easy) configuration: 
+   1. As built, the lane is in Low (easy) configuration. 
+8. Day 2 and/or Day 3 - High (hard) configuration: 
+   1. Place remaining two Notched Hurdle Pallets, with pipes affixed, as shown. Do not screw down, they should be removable. 
+  
+
+
+
+NOTE: Additional all-parallel layout is being developed. This will not require additional parts. (The extra holes in the notched pallet enable this alternative layout.)
+Critical dimensions: 
+Alternative materials and methods of construction are acceptable as long as the following hold. 
+* Each hurdle increment should be between 45 mm and 55 mm in height. 
+* The apparatus fits in, and fills, the 60 mm Z-pallet as shown. 
+* The pipes are free to rotate (with some friction). 
+* Each panel can support 10 kg in their centers without deflecting by more than 10 mm. 
+________________
+Mapping fiducials (6 required)
+  
+  
+
+Parts to cut: 
+1. 1/2x PVC pipe (or concrete form, thick cardboard tube, trash can, barrel, or other similar cylindrical object) with a diameter of 250-350 mm, a length of 500 mm, and a diameter variation of less than 25 mm along its length, cut in half lengthwise as shown. (One pipe makes 2 Mapping Fiducials.)
+   1. The material chosen should be strong enough to hold a 2 kg force as shown without substantially deflecting. If the material deflects slightly, double the quantity of beams (item 2, below) and secure them top and bottom. 
+  
+
+2. 1x Beam, length equal to internal diameter of the pipe (or other cylindrical object used). Ends should be cut at 82.5º as shown to facilitate a good fit. 
+  
+
+Assemble on-site: 
+1. Screw beam into top of half-pipe (or other cylindrical object used). 
+   1. If the material deflects slightly, also screw a second beam in the same manner at the bottom. 
+  
+
+2. Once the Labyrinth is set up, screw the fiducials in pairs, directly opposite each other on a wall, flush with the top. The locations shown below are an example, other locations may be chosen randomly as long as the robot is able, at different points in the mission, to see one, and then the other, of each pair. 
+  
+
+Critical dimensions: 
+All dimensions should be within the specified tolerances. 
+________________
+QR codes (5 sets required)
+  
+
+Parts to print: 
+1. Download set of 20 codes from this link and print on A4 sized paper at full size (do not “fit to page”). 
+  
+
+2. If laminated or printed on plastic, ensure that the surface is matte and non-reflective. 
+Assemble on-site: 
+1. Staple onto walls of the labyrinth at random locations and heights. 
+2. Retain spares that may be used to replace codes that may become damaged during the competition. Ensure that the replacements are secured in the same location as the originals. 
+Critical dimensions: 
+Letter-sized paper may be used but sheets should be printed at full sized (do not “fit to page”). 
+________________
+Sensor crates and door (3 required)
+  
+  
+  
+
+Parts to prepare, print, cut, and purchase: 
+1. 1x Crate (or box) of any color, with internal dimensions between 300 x 300 x 300 mm and 400 x 400 x 400 mm. Each face should have openings that total at least 30% of its surface area to let light in. (Note: For simplicity, the openings have been omitted in many of the other diagrams in this document and the rules document.)
+   1. This may also be made from scraps of timber as shown in the example image. 
+2. 10x Printed sensor test sheets that can be attached to the back surface of the crate and swapped out for randomization, available for download from here. 
+3. Chemical hand warmers (sachets that heat up when you unseal and shake them) of between 20 x 80 mm and 50 x 100 mm. Enough to keep one at least 10ºC warmer than ambient for the entire competition and practice time. As a general rule, 4 per crate per day is a good starting point but this will depend on the exact specifications of the available chemical hand warmers. These may be substituted for other small heat pads of the same size, such as USB powered hand warmers. 
+4. 3x round neodymium fridge magnets, 23 mm to 26 mm in diameter, 2 mm to 3 mm in thickness, and with metallic silver surfaces. 
+5. Black and clear adhesive tape, at least 50 mm wide. 
+6. Cardboard or similar as necessary, 50 x 150 mm (see below). 
+7. 1x panel to fit the opening of the crate, drilled with 10 mm diameter holes that allow it to be hinged to the crate with zip ties. The dimensions below are for a 300 x 300 mm crate, adjust depending on the size of the crate. 
+  
+
+8. 2x Heavy duty zip ties, at least 200 mm in length as hinges. 
+9. 1x Furniture/draw/cabinet handle with dimensions within the range as shown. Corners and edges may be rounded as long as they fall within the specified ranges. 
+  
+
+For example: 
+  
+  
+  
+
+Assemble on-site: 
+1. Attach the sensor test sheet by its top edge to the back of the crate, so that the bottom is free to hinge upwards. 
+2. Attach the chemical hand warmer to the back of the crate, behind one of the three marked section at the bottom of the sensor test sheet. The sheet should then hang over the hand warmer, just touching it. Ensure that the hand warmer cannot be seen from the front of the crate. The chemical hand warmer should be attached to the crate, rather than the sheet, to avoid distorting the sheet and giving away its position. In this example, the hand warmer (grey rectangle) is placed behind section “C”, on the far right looking from the front of the crate (far left looking from the back of the crate). 
+  
+     
+3. Attach a piece of black adhesive tape, at least 150 mm long, along the inside bottom edge of the crate. It may be necessary to place a piece of cardboard underneath the tape depending on the pattern of openings in the crate. 
+4. Using the clear adhesive tape, attach the three magnets in a line with centers 50 mm apart, each in a random orientation (North or South up), as shown in the diagram below. This should be secure to the crate well enough so that the magnets will not be accidentally pulled up by metal parts of the robot. 
+  
+
+Alternative methods of securing the magnets, such as with a 3D printed or lasercut faceplate, or gluing them to a piece of black plastic, are acceptable as long as the following criteria are satisfied. 
+   1. The overall black area is at least 150 x 50 mm in size. 
+   2. At least a 22 mm diameter circular area of each magnet is visible. This area must be either the natural silver color of the magnet, or white. 
+   3. The magnets are placed in a line with centers 50 mm apart. 
+   4. The difference in height between the top of each magnet and the top of the surrounding black surface is no more than 5 mm (above or below). 
+   5. The difference in height between each magnet is no more than 1 mm. 
+   6. There are no metallic fasteners (screws, bolts, etc.) within the 150 x 50 mm area or within 10 mm below this area as measured from the top surface of the magnets. 
+  
+
+5. Attach the handle to the panel as shown. Dimensions relative to the bottom left corner of the panel should hold regardless of the exact size of the panel. 
+  
+  
+
+6. Use zipties to loosely attach the panel to the crate as shown. Depending on the construction of the crate, it may be necessary to drill additional holes to facilitate securing the zipties. Panel should open and close freely (apart from the lower edge dragging against the floor), without moving the crate. 
+  
+________________
+
+Linear rail dexterity apparatus and manipulation objects (2 required)
+  
+  
+
+  
+                  
+Parts to prepare and cut: 
+1. 1x 600 mm beam. 
+2. 1x 200 mm beam with ends cut as shown. 
+  
+
+3. 3x white and 2x black cups, PVC pipes with endcaps (painted if necessary), or 3D printed cups. Internal diameter should be 50-60 mm, internal length should be 50 mm, variation in internal diameter should be no more than 10 mm, thickness of base should be 2-8 mm. 
+4. 10x soft foam cylinders or rectangular prisms, 20-30 mm in diameter (or 20-30 mm in square cross-section), 100-120 mm in length. These may be small foam paint rollers, pieces of insulation, packing, or upholstery foam, etc.. They should not have any surface features, such as metal/magnetic, Velcro-like, or adhesive, that allow them to be picked up without being properly grasped. 
+
+For example: 
+  
+
+   5. 1x labels from this link and print on A4 or Letter sized labels at full size (do not “fit to page”). Note that one sheet is enough for two apparatus. 
+  
+
+Pre-assemble: 
+   1. Screw part 2 onto part 1, centered, as shown above. 
+   2. Screw cups into the locations as shown above. Note that the two black cups will slightly overhang the face that they are screwed into. 
+   3. Cut out and stick printed labels into the bottom of each cup, oriented such that the text reads upright when the beam is horizontal. The labels correspond to the cups as shown here. Note that the first and second set are different, and should go onto different beams. The NIST project seal is extra and can be placed on the side of the beam. 
+  
+
+Keyboard Omni
+  
+  
+
+Parts to purchase and cut: 
+   1. 5x USB numeric keypads. 
+   2. 1x 4 port USB hub. 
+   3. 1x Laptop with text editor and at least 2 USB ports (can be a very old laptop). 
+   4. 1x Roll thick double sided foam mounting tape or adhesive, suitable for sticking to wood and plastic. 
+   5. Light coloured adhesive tape. 
+   6. 1x 300 mm beam cut as shown (lower omni support). 
+  
+
+   7. 1x 300 mm beam cut as shown (upper omni support).   
+Pre-assemble: 
+      1. Screw parts 6 and 7 together as shown. 
+  
+
+      2. Using mounting tape or adhesive, mount the numeric keypads as shown. The top keypad may be rotated so that the cable can be routed conveniently. 
+  
+
+      3. Place a square of light coloured adhesive tape on each “5” key. 
+  
+
+Assemble on-site: 
+      1. Connect 4 of the keypads to the USB hub and connect the USB hub and remaining keypad to the computer. 
+      2. Start the computer and load up a text editor. 
+      3. Ensure that “NUM LOCK” is turned on. 
+________________
+Additional parts to convert arena to finals configuration 
+      1. 4x 300x300 mm polycarbonate sheets with angle cut as shown. 
+  
+
+These are used during the finals, at the base of the 30 cm Z-pallets when they are raised at a 15º angle and need to connect onto a horizontal pallet without blocking the entrance. Note the overlap on the near side A (inconsequential as there is no opening there), compared to the angled cut on the far side B. 
+  
+
+      2. 8x 600 mm beams. These are used to raise additional Z-pallets for the finals. A 5 mm drill may also be needed to drill holes in the polycarbonate in-situ to prevent cracking. 
+  
+
+      3. Box of 100 additional wood screws, approx. 50-60 mm in length. 
+      4. Box of 100 additional wood screws, approx. 20-30 mm in length. 
+      5. Screwdriver bits, 5 mm drill bit, and power drill. 
+      6. Staple gun and 5-8 mm staples. 
+________________
+
+
+Other Items to Rent or Purchase
+Televisions: 
+      * At least one, ideally two, 80cm or larger, with HDMI inputs, cables, and mobile stands. 
+      * At least one with a laptop tray. 
+  
+
+
+
+Sound system: 
+      * Public Address speaker suitable for the 10x21m space. 
+      * Wired microphone with 10m cable. 
+      * Additional 3.5mm photo input for laptop. 
+  
+
+
+
+________________
+Score board: 
+      * Freestanding whiteboard. 
+      * Alternative - wooden panel with legs. 
+  
+or   
+      * Roll of white paper around 80cm wide (or sheets of white paper at least 80x80 cm). 
+      * Sometimes called “Utility paper”, “Easel paper”, “Craft paper”, etc. 
+  
+
+      * Something to secure paper to the board (probably tape). 
+  
+
+      * Coloured markers. 
+  
+
+      * Large (1m) ruler and/or T square. 
+  
+  
+
+________________
+
+
+Tables and chairs
+      * All tables approx. 800x2,000 mm
+      * 10x tables, each with 8 chairs, for teams
+      * 4x tables, each with 2 chairs, for operator stations
+      * 2x tables each with 2 chairs, for organizers
+
+
+  
+
+(Example layout)
+
+
+IT equipment
+      * Colour laser printer. 
+      * Paper - 2 reams (1,000 pages). 
+      * Toner - sufficient for 1,000 pages at standard office density. 
+      * USB cable. 
+      * Office stapler and staples. 
+      * Extension cords and a power strip to supply power to each table. 
+      * Ethernet cable with internet to each table. 
+________________
+
+
+Change log
+2025-07-09: Switched to RoboCup Cloud for links. 
+2025-06-24: Edited crate specifications.
+Open sides required changed from 60% to 30% to make it more practical to build out of OSB. Added example graphic. 
+2025-06-20: Published reference version.

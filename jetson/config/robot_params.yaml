@@ -1,0 +1,58 @@
+# RoboCupRescue RMRC 2026 - Robot parameters (Jetson)
+# Used by ROS2 nodes and launch files.
+
+robot_name: rescue_robot_2026
+
+# Network (override via env or launch args if needed)
+jetson_ip: "192.168.2.100"
+laptop_ip: "192.168.2.1"
+
+# Drive (Pico / MDD20A)
+drive:
+  serial_port: "/dev/ttyACM0"
+  baud_rate: 115200
+  watchdog_ms: 150
+  max_speed: 100
+
+# Cameras (3 Jetson USB). Run: jetson/scripts/list_cameras.sh to discover.
+# Current mapping: front=4, arm=2, backward=0. If only 1 cam works, try: CAMERA_DEVICES="4,2,0"
+cameras:
+  front: "/dev/video4"
+  arm: "/dev/video2"
+  backward: "/dev/video0"
+  width: 640
+  height: 480
+  fps: 15
+
+# Lidar (Unitree L2)
+lidar:
+  port: "/dev/ttyUSB1"
+  baud: 230400
+
+# Arm (SO-ARM101 / Feetech)
+arm:
+  port: "/dev/ttyUSB0"
+  baud: 1000000
+
+# Stowed posture (RMRC rulebook: autonomy bonus requires start from stowed)
+stowed_posture:
+  description: "Arm folded/retracted for transport; operator confirms before autonomy"
+
+# Arm presets (radians) — calibrate on real robot and fill in values
+# Used by arm_presets.py and autonomy_executor
+arm:
+  presets:
+    stowed: [0.0, -0.5, 0.0, 0.0, 0.0]
+    inspect_high: [0.0, -0.3, 0.4, 0.0, 0.0]
+    inspect_mid: [0.0, -0.2, 0.6, 0.0, 0.0]
+    inspect_low: [0.0, 0.0, 0.8, 0.0, 0.0]
+    cabinet_view: [0.0, -0.25, 0.5, 0.2, 0.0]
+    keypad_push: [0.0, -0.1, 0.7, 0.1, 0.0]
+    pick_ready: [0.0, -0.2, 0.5, 0.3, 0.0]
+
+# YOLO
+yolo:
+  confidence: 0.5
+  models:
+    hazmat: "models/hazmat_yolov8n.engine"
+    general: "models/yolov8n.engine"

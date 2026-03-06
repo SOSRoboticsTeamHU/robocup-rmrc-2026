@@ -1,0 +1,6 @@
+# Rescue robot ROS2 node parameters (override in launch)
+rescue_robot:
+  ros__parameters:
+    jetson_ip: "192.168.2.100"
+    drive_serial_port: "/dev/ttyACM0"
+    camera_fps: 30

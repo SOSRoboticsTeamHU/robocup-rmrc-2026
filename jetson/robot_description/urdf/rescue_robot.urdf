@@ -1,0 +1,212 @@
+<?xml version="1.0"?>
+<!--
+  RoboCupRescue RMRC 2026 - Rescue Robot URDF
+  ============================================
+  Body (aft_mapped) + Lidar + 4 Wheels + SO-ARM101 (6 revolute joints).
+  Joint names match /joint_states published by followerarm.py:
+    shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper
+-->
+<robot name="rescue_robot">
+
+  <!-- ===== Body — named aft_mapped to match Point-LIO TF ===== -->
+  <link name="aft_mapped">
+    <visual>
+      <geometry>
+        <box size="0.27 0.25 0.10"/>
+      </geometry>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <material name="gray">
+        <color rgba="0.3 0.3 0.35 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- ===== Lidar on top — tilted 10° forward ===== -->
+  <link name="lidar">
+    <visual>
+      <geometry>
+        <cylinder radius="0.035" length="0.04"/>
+      </geometry>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <material name="teal">
+        <color rgba="0.0 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="aft_mapped"/>
+    <child link="lidar"/>
+    <origin xyz="0.08 0 0.10" rpy="0 -0.1745329252 0"/>
+  </joint>
+
+  <!-- ===== Front Left Wheel ===== -->
+  <link name="wheel_fl">
+    <visual>
+      <geometry><cylinder radius="0.04" length="0.02"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="black"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="wheel_fl_joint" type="fixed">
+    <parent link="aft_mapped"/><child link="wheel_fl"/>
+    <origin xyz="0.09 0.135 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===== Front Right Wheel ===== -->
+  <link name="wheel_fr">
+    <visual>
+      <geometry><cylinder radius="0.04" length="0.02"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="black"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="wheel_fr_joint" type="fixed">
+    <parent link="aft_mapped"/><child link="wheel_fr"/>
+    <origin xyz="0.09 -0.135 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===== Rear Left Wheel ===== -->
+  <link name="wheel_rl">
+    <visual>
+      <geometry><cylinder radius="0.04" length="0.02"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="black"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="wheel_rl_joint" type="fixed">
+    <parent link="aft_mapped"/><child link="wheel_rl"/>
+    <origin xyz="-0.09 0.135 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===== Rear Right Wheel ===== -->
+  <link name="wheel_rr">
+    <visual>
+      <geometry><cylinder radius="0.04" length="0.02"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="black"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="wheel_rr_joint" type="fixed">
+    <parent link="aft_mapped"/><child link="wheel_rr"/>
+    <origin xyz="-0.09 -0.135 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- =================================================================
+       SO-ARM101 — 6-DOF arm (Feetech STS3215 servos)
+       Joint names MUST match /joint_states from followerarm.py:
+         shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper
+       Approximate link dimensions from SO-ARM100/101 data sheets.
+       ================================================================= -->
+
+  <!-- Arm base mount plate (fixed to body top-center) -->
+  <link name="arm_base">
+    <visual>
+      <geometry><cylinder radius="0.025" length="0.015"/></geometry>
+      <origin xyz="0 0 0.0075" rpy="0 0 0"/>
+      <material name="dark_gray"><color rgba="0.2 0.2 0.2 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="arm_base_joint" type="fixed">
+    <parent link="aft_mapped"/>
+    <child link="arm_base"/>
+    <!-- Mount on top of body, centered, behind lidar -->
+    <origin xyz="-0.02 0 0.10" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Joint 1: Shoulder Pan (rotate around Z) -->
+  <link name="shoulder_pan_link">
+    <visual>
+      <geometry><cylinder radius="0.020" length="0.045"/></geometry>
+      <origin xyz="0 0 0.0225" rpy="0 0 0"/>
+      <material name="arm_blue"><color rgba="0.2 0.4 0.8 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="shoulder_pan" type="revolute">
+    <parent link="arm_base"/>
+    <child link="shoulder_pan_link"/>
+    <origin xyz="0 0 0.015" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14" upper="3.14" effort="1.5" velocity="5.0"/>
+  </joint>
+
+  <!-- Joint 2: Shoulder Lift (pitch, rotate around Y) -->
+  <link name="shoulder_lift_link">
+    <visual>
+      <geometry><box size="0.025 0.025 0.065"/></geometry>
+      <origin xyz="0 0 0.0325" rpy="0 0 0"/>
+      <material name="arm_blue"><color rgba="0.2 0.4 0.8 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="shoulder_lift" type="revolute">
+    <parent link="shoulder_pan_link"/>
+    <child link="shoulder_lift_link"/>
+    <origin xyz="0 0 0.045" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="1.5" velocity="5.0"/>
+  </joint>
+
+  <!-- Joint 3: Elbow Flex (pitch, rotate around Y) -->
+  <link name="elbow_flex_link">
+    <visual>
+      <geometry><box size="0.022 0.022 0.065"/></geometry>
+      <origin xyz="0 0 0.0325" rpy="0 0 0"/>
+      <material name="arm_silver"><color rgba="0.6 0.6 0.65 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="elbow_flex" type="revolute">
+    <parent link="shoulder_lift_link"/>
+    <child link="elbow_flex_link"/>
+    <origin xyz="0 0 0.065" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="1.5" velocity="5.0"/>
+  </joint>
+
+  <!-- Joint 4: Wrist Flex (pitch, rotate around Y) -->
+  <link name="wrist_flex_link">
+    <visual>
+      <geometry><box size="0.020 0.020 0.040"/></geometry>
+      <origin xyz="0 0 0.020" rpy="0 0 0"/>
+      <material name="arm_silver"><color rgba="0.6 0.6 0.65 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="wrist_flex" type="revolute">
+    <parent link="elbow_flex_link"/>
+    <child link="wrist_flex_link"/>
+    <origin xyz="0 0 0.065" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="1.0" velocity="5.0"/>
+  </joint>
+
+  <!-- Joint 5: Wrist Roll (rotate around Z) -->
+  <link name="wrist_roll_link">
+    <visual>
+      <geometry><cylinder radius="0.012" length="0.025"/></geometry>
+      <origin xyz="0 0 0.0125" rpy="0 0 0"/>
+      <material name="arm_blue"><color rgba="0.2 0.4 0.8 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="wrist_roll" type="revolute">
+    <parent link="wrist_flex_link"/>
+    <child link="wrist_roll_link"/>
+    <origin xyz="0 0 0.040" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14" upper="3.14" effort="0.5" velocity="5.0"/>
+  </joint>
+
+  <!-- Joint 6: Gripper (open/close, rotate around Y) -->
+  <link name="gripper_link">
+    <visual>
+      <geometry><box size="0.040 0.015 0.025"/></geometry>
+      <origin xyz="0.010 0 0" rpy="0 0 0"/>
+      <material name="gripper_orange"><color rgba="0.9 0.5 0.1 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="gripper" type="revolute">
+    <parent link="wrist_roll_link"/>
+    <child link="gripper_link"/>
+    <origin xyz="0 0 0.025" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.5" upper="1.0" effort="0.5" velocity="5.0"/>
+  </joint>
+
+</robot>
