@@ -6,19 +6,6 @@ A split architecture: a **laptop** runs the operator GUI (joystick, arm leader, 
 
 ---
 
-## Pushing to GitHub
-
-1. **Create a new repository** on GitHub (do not initialize with README).
-2. **Add remote and push:**
-   ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/robocup_rescue_2026.git
-   git branch -M main
-   git push -u origin main
-   ```
-3. **Replace** `YOUR_USERNAME` with your GitHub username or organization.
-
----
-
 ## Features
 
 | Component | Description |
