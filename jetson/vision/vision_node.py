@@ -438,6 +438,17 @@ class VisionNode:
         self.last_detections = {}
         self.last_qr_codes = {}
         self.last_landolt_readings = {}
+        # QR output file (rulebook: write QR data to file for judge)
+        self._qr_output_path = os.path.expanduser("~/qr_detections.txt")
+        self._qr_seen_recently = {}  # data -> timestamp (deduplicate within 60s)
+        # ArUco fiducial detection
+        self._aruco_dict = None
+        self._aruco_params = None
+        try:
+            self._aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+            self._aruco_params = cv2.aruco.DetectorParameters()
+        except Exception:
+            pass  # cv2.aruco not available
         self._latest_arm_frame = None
         self._latest_arm_detections = []
         self._latest_arm_landolt = []
@@ -538,7 +549,14 @@ class VisionNode:
         return buf.getvalue()
 
     def _try_add_backward_camera(self, resolved: dict, force_opencv: bool = False) -> None:
-        """Add backward camera: try configured device first, then any unused /dev/video* if it fails."""
+        """Add backward camera.
+
+        Default path: OpenCV reader. The Light MJPEG GStreamer pipeline has a
+        bug where the backward USB camera only delivers a single frame before
+        the queue stalls (caps negotiation mismatch / queue back-pressure).
+        Override with BACKWARD_FORCE_OPENCV=0 to fall back to the legacy MJPEG
+        path.
+        """
         if "backward" in self.cameras:
             return
         configured = resolved.get("backward")
@@ -546,10 +564,29 @@ class VisionNode:
         all_existing = [f"/dev/video{i}" for i in range(12) if os.path.exists(f"/dev/video{i}")]
         candidates = [configured] if configured and configured not in used else []
         candidates += [d for d in all_existing if d not in used and d not in candidates]
+        # BACKWARD_FORCE_OPENCV defaults to "1" (the reliable path). Set 0 to
+        # try Light MJPEG again (e.g. for benchmarking).
+        backward_opencv = os.environ.get("BACKWARD_FORCE_OPENCV", "1").strip().lower() in ("1", "true", "yes")
+        if backward_opencv:
+            for device in candidates:
+                if not device or not os.path.exists(device):
+                    continue
+                # OpenCV CPU reader: own thread, auto-reopens, no GStreamer caps
+                # negotiation. 320x240@15 keeps CPU and bandwidth low.
+                reader = OpenCVCameraReader("backward", device, width=320, height=240, fps=15)
+                if reader.build_and_connect():
+                    self.cameras["backward"] = reader
+                    if device != configured:
+                        print(f"[VISION] backward: configured {configured} failed, using {device} instead")
+                    print("[VISION] backward: using OpenCV reader (BACKWARD_FORCE_OPENCV=1)")
+                    time.sleep(0.6)
+                    return
+            print(f"[VISION] backward: no signal via OpenCV (tried {candidates}). Check CAMERA_DEVICES.")
+            return
+        # Legacy path: Light MJPEG, then OpenCV fallback inside _try_add_camera.
         for device in candidates:
             if not device or not os.path.exists(device):
                 continue
-            # Backward: Light MJPEG only — 3x Full GPU exhausts NVMM (NvMapMemAlloc error 12)
             if self._try_add_camera("backward", device, prefer_gpu=False, force_opencv=force_opencv):
                 if device != configured:
                     print(f"[VISION] backward: configured {configured} failed, using {device} instead")
@@ -805,6 +842,50 @@ class VisionNode:
                     self._latest_arm_detections = detections
                     self._latest_arm_landolt = landolt_readings
 
+                # QR detection + file output (rulebook requirement)
+                qr_codes = self.last_qr_codes.get(cam_id, [])
+                for qr in qr_codes:
+                    data = qr.get("data", "")
+                    if data:
+                        now = time.time()
+                        last_seen = self._qr_seen_recently.get(data, 0)
+                        if now - last_seen > 60.0:  # deduplicate within 60s
+                            self._qr_seen_recently[data] = now
+                            try:
+                                from datetime import datetime
+                                line = f"{datetime.now().isoformat()} | cam={cam_id} | {data}\n"
+                                with open(self._qr_output_path, "a") as f:
+                                    f.write(line)
+                            except Exception:
+                                pass
+
+                # ArUco fiducial detection on front camera
+                if cam_id == "front" and self._aruco_dict is not None:
+                    try:
+                        gray = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2GRAY)
+                        corners, ids, _ = cv2.aruco.detectMarkers(gray, self._aruco_dict, parameters=self._aruco_params)
+                        if ids is not None and len(ids) > 0:
+                            for i, marker_id in enumerate(ids.flatten()):
+                                # Approximate center in pixels → rough world position
+                                c = corners[i][0].mean(axis=0)
+                                # Publish fiducial on snapshot result port for SLAM integration
+                                fid_msg = {
+                                    "msg_type": "fiducial",
+                                    "id": int(marker_id),
+                                    "pixel_x": float(c[0]),
+                                    "pixel_y": float(c[1]),
+                                    "timestamp": time.time(),
+                                }
+                                if self.snapshot_result_socket:
+                                    try:
+                                        self.snapshot_result_socket.send_multipart(
+                                            [json.dumps(fid_msg).encode()], zmq.NOBLOCK
+                                        )
+                                    except (zmq.Again, zmq.ZMQError):
+                                        pass
+                    except Exception:
+                        pass
+
             time.sleep(0.08)  # ~12 Hz inference
 
     def _jpeg_to_rgb(self, jpeg_bytes):
@@ -916,9 +997,101 @@ class VisionNode:
             time.sleep(0.04)
 
     def _snapshot_request_loop(self):
-        # Simplified - add your full snapshot logic here if needed
+        """Handle snapshot requests from autonomy executor (HAZMAT/Landolt/keypad_detect)."""
+        from vision.snapshot_mode import capture_hazmat_still, capture_landolt_still
         while self.running:
-            time.sleep(0.1)
+            try:
+                msg_raw = self.snapshot_request_socket.recv_json(zmq.NOBLOCK)
+                req_type = msg_raw.get("result_type", msg_raw.get("request", "snapshot"))
+                frame = self._latest_arm_frame
+                if frame is None:
+                    time.sleep(0.1)
+                    continue
+
+                if req_type == "keypad_detect":
+                    # Run general YOLO on arm camera, look for button/keypad-like objects
+                    detections = self.yolo.detect(frame) if self.yolo.ready else []
+                    # Filter for button-like classes
+                    button_classes = {"button", "keyboard", "remote", "cell phone", "keypad", "remote control"}
+                    keypad_dets = [d for d in detections if d.get("class_name", "").lower() in button_classes]
+                    result_meta = {
+                        "msg_type": "snapshot_result",
+                        "timestamp": time.time(),
+                        "result_type": "keypad_detect",
+                        "detections": keypad_dets,
+                        "camera_id": "arm",
+                    }
+                    jpeg_bytes, _ = capture_hazmat_still(frame, keypad_dets)
+                    try:
+                        parts = [json.dumps(result_meta).encode()]
+                        if jpeg_bytes:
+                            parts.append(jpeg_bytes)
+                        self.snapshot_result_socket.send_multipart(parts, zmq.NOBLOCK)
+                    except (zmq.Again, zmq.ZMQError):
+                        pass
+                elif req_type == "pick_detect":
+                    detections = self.yolo.detect(frame) if self.yolo.ready else []
+                    ignored_classes = {"person", "face", "human"}
+                    pick_dets = [d for d in detections if d.get("class_name", "").lower() not in ignored_classes]
+                    result_meta = {
+                        "msg_type": "snapshot_result",
+                        "timestamp": time.time(),
+                        "result_type": "pick_detect",
+                        "detections": pick_dets,
+                        "camera_id": "arm",
+                    }
+                    jpeg_bytes, _ = capture_hazmat_still(frame, pick_dets if pick_dets else detections)
+                    try:
+                        parts = [json.dumps(result_meta).encode()]
+                        if jpeg_bytes:
+                            parts.append(jpeg_bytes)
+                        self.snapshot_result_socket.send_multipart(parts, zmq.NOBLOCK)
+                    except (zmq.Again, zmq.ZMQError):
+                        pass
+
+                elif req_type in ("hazmat", "snapshot"):
+                    detections = self._latest_arm_detections or []
+                    hazmat_dets = [d for d in detections if d.get("source") == "hazmat" or "hazmat" in d.get("class_name", "").lower()]
+                    jpeg_bytes, identity = capture_hazmat_still(frame, hazmat_dets if hazmat_dets else detections)
+                    result_meta = {
+                        "msg_type": "snapshot_result",
+                        "timestamp": time.time(),
+                        "result_type": "hazmat",
+                        "identity": identity,
+                        "camera_id": "arm",
+                    }
+                    try:
+                        parts = [json.dumps(result_meta).encode()]
+                        if jpeg_bytes:
+                            parts.append(jpeg_bytes)
+                        self.snapshot_result_socket.send_multipart(parts, zmq.NOBLOCK)
+                    except (zmq.Again, zmq.ZMQError):
+                        pass
+
+                elif req_type == "landolt":
+                    readings = self._latest_arm_landolt or []
+                    direction = readings[0].direction_name if readings else "unknown"
+                    jpeg_bytes = capture_landolt_still(frame, direction)
+                    result_meta = {
+                        "msg_type": "snapshot_result",
+                        "timestamp": time.time(),
+                        "result_type": "landolt",
+                        "direction": direction,
+                        "camera_id": "arm",
+                    }
+                    try:
+                        parts = [json.dumps(result_meta).encode()]
+                        if jpeg_bytes:
+                            parts.append(jpeg_bytes)
+                        self.snapshot_result_socket.send_multipart(parts, zmq.NOBLOCK)
+                    except (zmq.Again, zmq.ZMQError):
+                        pass
+
+            except zmq.Again:
+                pass
+            except Exception as e:
+                print(f"[VISION] Snapshot request error: {e}")
+            time.sleep(0.05)
 
     def stop(self):
         self.running = False

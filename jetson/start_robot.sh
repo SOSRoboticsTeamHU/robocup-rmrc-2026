@@ -8,6 +8,17 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
 
+# Log rotation: cap each log at 5 MB to prevent filling the Jetson disk
+MAX_LOG_BYTES=$((5 * 1024 * 1024))
+for logfile in "$LOG_DIR"/*.log; do
+    [ -f "$logfile" ] || continue
+    logsize=$(stat -c%s "$logfile" 2>/dev/null || stat -f%z "$logfile" 2>/dev/null || echo 0)
+    if [ "$logsize" -gt "$MAX_LOG_BYTES" ]; then
+        mv -f "$logfile" "${logfile}.old"
+        echo "[LOG] Rotated $(basename "$logfile") (${logsize} bytes)"
+    fi
+done
+
 # Camera: 1=full DeepStream SDK (TensorRT in-pipeline), 0=vision_node
 USE_DEEPSTREAM_SDK="${USE_DEEPSTREAM_SDK:-0}"
 USE_VISION_NODE=1

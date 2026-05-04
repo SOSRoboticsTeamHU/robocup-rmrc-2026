@@ -35,10 +35,10 @@ PRESETS = {
 }
 
 
-def load_presets_from_yaml(path: str) -> dict:
-    """Load arm presets from robot_params.yaml (key: arm.presets.<name>)."""
+def _load_yaml_presets(path: str):
+    """Load presets from a single YAML file (key: arm.presets.<name>)."""
     if not os.path.isfile(path):
-        return PRESETS
+        return
     try:
         with open(path, "r") as f:
             data = yaml.safe_load(f) or {}
@@ -49,6 +49,14 @@ def load_presets_from_yaml(path: str) -> dict:
                 PRESETS[name] = list(values)[:5]
     except Exception:
         pass
+
+
+def load_presets_from_yaml(path: str) -> dict:
+    """Load arm presets from robot_params.yaml, then override with arm_presets_custom.yaml."""
+    _load_yaml_presets(path)
+    # Also load custom presets (written by laptop/control/arm_calibrate.py)
+    custom_path = os.path.join(os.path.dirname(path), "arm_presets_custom.yaml")
+    _load_yaml_presets(custom_path)
     return PRESETS
 
 

@@ -52,7 +52,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'control'))
 try:
     from shared.constants import (
         JETSON_IP, ZMQ_PORT_CAMERA, ZMQ_PORT_CAMERA_CONTROL, ZMQ_PORT_STATUS,
-        ZMQ_PORT_DRIVE, ZMQ_PORT_ARM, ZMQ_PORT_AUTONOMY, ZMQ_PORT_AUTONOMY_STATUS, ZMQ_PORT_SNAPSHOT_RESULT, MISSION_DURATION
+        ZMQ_PORT_DRIVE, ZMQ_PORT_ARM, ZMQ_PORT_AUTONOMY, ZMQ_PORT_AUTONOMY_STATUS,
+        ZMQ_PORT_SNAPSHOT_RESULT, ZMQ_PORT_SLAM, MISSION_DURATION
     )
 except ImportError:
     JETSON_IP = "192.168.2.100"
@@ -64,7 +65,10 @@ except ImportError:
     ZMQ_PORT_AUTONOMY = 5560
     ZMQ_PORT_AUTONOMY_STATUS = 5565
     ZMQ_PORT_SNAPSHOT_RESULT = 5571
+    ZMQ_PORT_SLAM = 5562
     MISSION_DURATION = 300
+
+ZMQ_RECONNECT_TIMEOUT_S = 5.0  # Reconnect all sockets after this many seconds of silence
 
 # Import camera receiver - try multiple import paths
 CAMERA_AVAILABLE = False
@@ -1003,6 +1007,10 @@ class ControlPanel(QFrame):
         self.lap_button.setToolTip("Increment teleop lap count for report")
         self.lap_button.clicked.connect(self.lap_teleop_clicked.emit)
         
+        self.reset_button = QPushButton("↻ Reset")
+        self.reset_button.setMinimumHeight(36)
+        self.reset_button.setToolTip("Mini-mission reset (rulebook 2.5): clear scores, keep timer running")
+        
         self.report_button = QPushButton("📄 Report")
         self.report_button.setMinimumHeight(36)
         self.report_button.setToolTip("Generate mission report PDF + QR list for judge. Saved to ~/mission_report.pdf and ~/mission_report_qr_codes.txt. See docs/COMPETITION_CHECKLIST.md.")
@@ -1026,6 +1034,7 @@ class ControlPanel(QFrame):
         layout.addWidget(self.stowed_checkbox)
         layout.addWidget(self.mapping_btn)
         layout.addWidget(self.sensor_cabinet_btn)
+        layout.addWidget(self.reset_button)
         layout.addWidget(self.report_button)
     
     def update_joystick(self, connected: bool, y: int = 0, x: int = 0, z: int = 0):
@@ -1576,6 +1585,7 @@ class OperatorStation(QMainWindow):
         self.control_panel.setToolTip(
             "Joystick: 0=Start, 1=Stop, 2=Lap, 3=Report, 4=YOLO, 5=QR, 6=Stowed, 7=Back support UP, 8=Back support DOWN, 9=Mapping, 10=Sensor Cab. Use --joy-buttons-debug to see ID on press."
         )
+        self.control_panel.reset_button.clicked.connect(self._on_mission_reset_clicked)
         self.teleop_panel = TeleopPanel(self.control_panel)
         self.teleop_panel.start_mission.connect(self._start_mission)
         self.teleop_panel.stop_mission.connect(self._stop_mission)
@@ -1650,11 +1660,13 @@ class OperatorStation(QMainWindow):
             self.camera_receiver = None
     
     def _setup_zmq(self):
-        """Setup ZMQ subscriber for robot status, autonomy status (laps), snapshot_result; PUSH for autonomy and arm (back support)."""
+        """Setup ZMQ subscriber for robot status, SLAM pose, autonomy status, snapshot_result; PUSH for autonomy and arm."""
         self.autonomy_socket = None
         self.autonomy_status_socket = None
         self.snapshot_result_socket = None
         self.arm_socket = None
+        self.slam_socket = None
+        self._slam_pose = None  # (x, y, yaw) from SLAM bridge
         try:
             self.zmq_context = zmq.Context()
             self.status_socket = self.zmq_context.socket(zmq.SUB)
@@ -1662,6 +1674,12 @@ class OperatorStation(QMainWindow):
             self.status_socket.setsockopt(zmq.RCVTIMEO, 10)
             self.status_socket.setsockopt(zmq.CONFLATE, 1)  # Only latest
             self.status_socket.connect(f"tcp://{self.jetson_ip}:{ZMQ_PORT_STATUS}")
+            # SLAM pose subscriber (port 5562) — for waypoints, fiducials, dexterity guard
+            self.slam_socket = self.zmq_context.socket(zmq.SUB)
+            self.slam_socket.setsockopt(zmq.SUBSCRIBE, b"")
+            self.slam_socket.setsockopt(zmq.RCVTIMEO, 5)
+            self.slam_socket.setsockopt(zmq.CONFLATE, 1)
+            self.slam_socket.connect(f"tcp://{self.jetson_ip}:{ZMQ_PORT_SLAM}")
             self.autonomy_socket = self.zmq_context.socket(zmq.PUSH)
             self.autonomy_socket.setsockopt(zmq.LINGER, 0)
             self.autonomy_socket.connect(f"tcp://{self.jetson_ip}:{ZMQ_PORT_AUTONOMY}")
@@ -1683,6 +1701,7 @@ class OperatorStation(QMainWindow):
             self.autonomy_status_socket = None
             self.snapshot_result_socket = None
             self.arm_socket = None
+            self.slam_socket = None
 
     def _setup_camera_control(self):
         """Setup ZMQ PUB to Jetson to toggle YOLO/QR (higher FPS when off)."""
@@ -1803,6 +1822,38 @@ class OperatorStation(QMainWindow):
         except Exception as e:
             self.statusBar().showMessage(f"Back support send error: {e}", 2000)
 
+    def _dexterity_target_too_close(self, target_xy) -> bool:
+        """GUI pre-check: rulebook 2026-04-12 dexterity 30 cm guard.
+
+        Returns True if a target_xy is provided and the current SLAM pose is
+        closer than DEXTERITY_AUTONOMY_MIN_DIST_M to it. The Jetson re-checks
+        as authoritative; this is just a fast operator nudge.
+        """
+        if not target_xy:
+            return False
+        try:
+            from shared.constants import DEXTERITY_AUTONOMY_MIN_DIST_M
+        except ImportError:
+            DEXTERITY_AUTONOMY_MIN_DIST_M = 0.30
+        pose = self._get_slam_pose()
+        if not pose:
+            return False
+        try:
+            dx = float(pose[0]) - float(target_xy[0])
+            dy = float(pose[1]) - float(target_xy[1])
+        except (TypeError, ValueError, IndexError):
+            return False
+        dist = (dx * dx + dy * dy) ** 0.5
+        if dist < DEXTERITY_AUTONOMY_MIN_DIST_M:
+            self.statusBar().showMessage(
+                f"Too close to target ({dist*100:.0f} cm < "
+                f"{DEXTERITY_AUTONOMY_MIN_DIST_M*100:.0f} cm) — drive back to claim 4×.",
+                5000,
+            )
+            QApplication.beep()
+            return True
+        return False
+
     def _on_start_autonomy(self, mode_or_test: str):
         """Start autonomy: require Stowed, send mode from test, switch to autonomy panel."""
         if not self.control_panel.stowed_checkbox.isChecked():
@@ -1816,21 +1867,32 @@ class OperatorStation(QMainWindow):
             way_b = getattr(self, "_waypoint_b", None) or [2.0, 0.0]
             self._send_autonomy_cmd("lap", waypoint_a=way_a, waypoint_b=way_b)
         elif test_id == "sensor_cabinet":
-            self._send_autonomy_cmd("sensor_cabinet")
+            target = getattr(self, "_waypoint_b", None) or getattr(self, "_waypoint_a", None)
+            if self._dexterity_target_too_close(target):
+                return
+            self._send_autonomy_cmd("sensor_cabinet", target_xy=target)
         elif test_id == "keypad_omni":
-            self._send_autonomy_cmd("keypad")
+            target = getattr(self, "_waypoint_b", None) or getattr(self, "_waypoint_a", None)
+            if self._dexterity_target_too_close(target):
+                return
+            self._send_autonomy_cmd("keypad", target_xy=target)
         elif test_id == "linear_rail_pick":
             pick_mode = self.teleop_panel.get_pick_mode_id()
             pick_goal = getattr(self, "_waypoint_b", None) or getattr(self, "_waypoint_a", None)
             if pick_goal is None and hasattr(self, "slam_view"):
                 pose = self._get_slam_pose()
                 pick_goal = [pose[0], pose[1]] if pose else None
+            if self._dexterity_target_too_close(pick_goal):
+                return
             self._send_autonomy_cmd("pick", pick_mode=pick_mode, pick_goal=pick_goal)
         elif test_id == "linear_rail_inspect":
-            self._send_autonomy_cmd("inspect_tube")
+            target = getattr(self, "_waypoint_b", None) or getattr(self, "_waypoint_a", None)
+            if self._dexterity_target_too_close(target):
+                return
+            self._send_autonomy_cmd("inspect_tube", target_xy=target)
         elif test_id in ("labyrinth_flat", "labyrinth_krails"):
-            waypoints = self._explore_waypoints_from_gui()
-            self._send_autonomy_cmd("explore", waypoints=waypoints)
+            # Prefer frontier-based exploration for real autonomy points
+            self._send_autonomy_cmd("explore_labyrinth")
         else:
             self._send_autonomy_cmd(mode_or_test)
         self.set_mode("autonomy")
@@ -1983,6 +2045,15 @@ class OperatorStation(QMainWindow):
             if self.remaining_time <= 0:
                 self._stop_mission()
         
+        # Poll SLAM pose (port 5562)
+        if getattr(self, 'slam_socket', None):
+            try:
+                slam_msg = self.slam_socket.recv_json(zmq.NOBLOCK)
+                if 'x' in slam_msg and 'y' in slam_msg:
+                    self._slam_pose = (float(slam_msg['x']), float(slam_msg['y']))
+            except (zmq.Again, Exception):
+                pass
+        
         # Poll ZMQ for status updates
         if self.status_socket:
             try:
@@ -1990,9 +2061,12 @@ class OperatorStation(QMainWindow):
                 self._handle_status(msg)
                 self._last_status_time = time.time()
             except zmq.Again:
-                # Check for connection loss (no status for 3 seconds)
+                # Check for connection loss
                 if hasattr(self, '_last_status_time') and time.time() - self._last_status_time > 3.0:
                     self.status_hud.set_connection("jetson", False)
+                # Auto-reconnect after timeout
+                if hasattr(self, '_last_status_time') and time.time() - self._last_status_time > ZMQ_RECONNECT_TIMEOUT_S:
+                    self._reconnect_zmq()
         # Poll autonomy status (laps, Nav2 overlay for SLAM)
         if getattr(self, "autonomy_status_socket", None):
             try:
@@ -2121,6 +2195,25 @@ class OperatorStation(QMainWindow):
             self._last_cpu_temp, self._last_uptime, active_cameras
         )
     
+    def _reconnect_zmq(self):
+        """Tear down and recreate all ZMQ sockets (auto-reconnect after Jetson reboot)."""
+        print("[GUI] ZMQ reconnecting...")
+        for attr in ('status_socket', 'slam_socket', 'autonomy_socket', 'arm_socket',
+                     'autonomy_status_socket', 'snapshot_result_socket', 'camera_control_socket'):
+            sock = getattr(self, attr, None)
+            if sock:
+                try:
+                    sock.close()
+                except Exception:
+                    pass
+                setattr(self, attr, None)
+        # Recreate (reuse existing context)
+        if self.zmq_context:
+            self._setup_zmq()
+            self._setup_camera_control()
+        self._last_status_time = time.time()  # prevent immediate re-trigger
+        self.statusBar().showMessage("ZMQ reconnected", 3000)
+
     def _handle_status(self, status: dict):
         """Handle status update from robot."""
         self.status_hud.set_connection("pico", status.get("pico_connected", False))
@@ -2138,6 +2231,58 @@ class OperatorStation(QMainWindow):
         self._last_uptime = uptime
         self.status_hud.set_robot_info(cpu_temp, uptime, cameras)
     
+    def _on_mission_reset_clicked(self):
+        """Operator-initiated mini-mission reset (rulebook 2.5).
+
+        Broadcasts mission_reset on the autonomy port, clears in-mission counters,
+        and re-arms the mission timer so the run continues with the remaining time.
+        Persistent best scores in ~/.rmrc/best_scores.json are preserved.
+        """
+        try:
+            from shared.mission_reset import broadcast_mission_reset
+        except ImportError:
+            broadcast_mission_reset = None
+        # Increment mini-mission index so the report can list each one.
+        self._mini_mission_index = getattr(self, "_mini_mission_index", 0) + 1
+        if broadcast_mission_reset and getattr(self, "autonomy_socket", None):
+            try:
+                broadcast_mission_reset(
+                    self.autonomy_socket,
+                    mission_id=getattr(self, "_mission_id", ""),
+                    mini_mission_index=self._mini_mission_index,
+                    reason="operator",
+                )
+            except Exception:
+                pass
+        # Local clear (preserves persistent best score)
+        self.mission_laps_teleop = 0
+        self.mission_laps_auto = 0
+        self._scoring_state = {
+            "keypad_clean": 0, "keypad_dirty": 0, "stairs_teleop": 0, "stairs_auto": 0,
+            "align_teleop": 0, "align_auto": 0, "drop_15": 0, "drop_30": 0,
+            "objects_removed": 0, "objects_in_container": 0, "inspect_readings": [],
+        }
+        if hasattr(self, "detection_log"):
+            for attr in ("_seen_qr_data", "qr_entries"):
+                obj = getattr(self.detection_log, attr, None)
+                if obj is not None:
+                    try:
+                        obj.clear()
+                    except Exception:
+                        pass
+            for c in ("qr_count", "detection_count", "hazmat_count", "landolt_count"):
+                if hasattr(self.detection_log, c):
+                    setattr(self.detection_log, c, 0)
+            if hasattr(self.detection_log, "list_widget"):
+                self.detection_log.list_widget.clear()
+            if hasattr(self.detection_log, "_update_stats"):
+                self.detection_log._update_stats()
+        self.set_mode("teleop")
+        self.statusBar().showMessage(
+            f"Mission reset — mini-mission #{self._mini_mission_index}. Best mini-mission counts.",
+            5000,
+        )
+
     def _start_mission(self):
         """Start a new mission."""
         self.mission_active = True
@@ -2196,8 +2341,8 @@ class OperatorStation(QMainWindow):
         self.statusBar().showMessage("SLAM panel visible")
     
     def _get_slam_pose(self):
-        """Return (x, y) from SLAM if available (e.g. from RViz stream or SLAM view)."""
-        return None
+        """Return (x, y) from SLAM ZMQ subscriber, or None if no pose yet."""
+        return self._slam_pose if getattr(self, '_slam_pose', None) else None
     
     def _stop_mission(self):
         """Stop the current mission."""
@@ -2381,18 +2526,15 @@ class OperatorStation(QMainWindow):
             self.camera_receiver.disconnect()
         
         if self.zmq_context:
-            if self.camera_control_socket:
-                self.camera_control_socket.close()
-            if getattr(self, "arm_socket", None):
-                self.arm_socket.close()
-            if getattr(self, "autonomy_socket", None):
-                self.autonomy_socket.close()
-            if getattr(self, "autonomy_status_socket", None):
-                self.autonomy_status_socket.close()
-            if getattr(self, "snapshot_result_socket", None):
-                self.snapshot_result_socket.close()
-            if self.status_socket:
-                self.status_socket.close()
+            for attr in ('camera_control_socket', 'arm_socket', 'autonomy_socket',
+                         'autonomy_status_socket', 'snapshot_result_socket',
+                         'slam_socket', 'status_socket'):
+                sock = getattr(self, attr, None)
+                if sock:
+                    try:
+                        sock.close()
+                    except Exception:
+                        pass
             self.zmq_context.term()
         
         event.accept()

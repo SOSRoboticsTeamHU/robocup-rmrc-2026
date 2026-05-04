@@ -1,0 +1,262 @@
+<?xml version="1.0" ?>
+<!--
+  RoboCupRescue RMRC 2026 — Gazebo Arena World
+  Simplified RMRC arena with key terrain elements for Nav2 + autonomy testing.
+  Elements: flat arena floor, boundary walls, incline ramp, k-rails,
+  hurdles, stairs, labyrinth section.
+-->
+<sdf version="1.6">
+  <world name="rmrc_arena">
+
+    <!-- Physics -->
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- Lighting -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- ==================== Arena Floor (8m x 4m) ==================== -->
+    <model name="arena_floor">
+      <static>true</static>
+      <link name="floor_link">
+        <collision name="floor_collision">
+          <geometry>
+            <box><size>8.0 4.0 0.01</size></box>
+          </geometry>
+        </collision>
+        <visual name="floor_visual">
+          <geometry>
+            <box><size>8.0 4.0 0.01</size></box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>4.0 0 0.005 0 0 0</pose>
+    </model>
+
+    <!-- ==================== Boundary Walls ==================== -->
+    <!-- Left wall -->
+    <model name="wall_left">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>8.0 0.05 0.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>8.0 0.05 0.5</size></box></geometry>
+          <material><ambient>0.4 0.4 0.4 1</ambient></material>
+        </visual>
+      </link>
+      <pose>4.0 2.0 0.25 0 0 0</pose>
+    </model>
+    <!-- Right wall -->
+    <model name="wall_right">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>8.0 0.05 0.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>8.0 0.05 0.5</size></box></geometry>
+          <material><ambient>0.4 0.4 0.4 1</ambient></material>
+        </visual>
+      </link>
+      <pose>4.0 -2.0 0.25 0 0 0</pose>
+    </model>
+    <!-- Start wall -->
+    <model name="wall_start">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.05 4.0 0.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.05 4.0 0.5</size></box></geometry>
+          <material><ambient>0.4 0.4 0.4 1</ambient></material>
+        </visual>
+      </link>
+      <pose>0 0 0.25 0 0 0</pose>
+    </model>
+    <!-- End wall -->
+    <model name="wall_end">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.05 4.0 0.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.05 4.0 0.5</size></box></geometry>
+          <material><ambient>0.4 0.4 0.4 1</ambient></material>
+        </visual>
+      </link>
+      <pose>8.0 0 0.25 0 0 0</pose>
+    </model>
+
+    <!-- ==================== Incline Ramp (15°, 1m long) ==================== -->
+    <model name="incline_ramp">
+      <static>true</static>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>1.0 0.4 0.02</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>1.0 0.4 0.02</size></box></geometry>
+          <material><ambient>0.6 0.5 0.3 1</ambient></material>
+        </visual>
+      </link>
+      <!-- 15° incline: sin(15°)*0.5 ≈ 0.13 height at center -->
+      <pose>1.5 0 0.13 0 -0.2618 0</pose>
+    </model>
+
+    <!-- ==================== K-Rails (concrete barriers) ==================== -->
+    <model name="krail_1">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.0 0.15 0.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.0 0.15 0.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.7 1</ambient></material>
+        </visual>
+      </link>
+      <pose>3.0 0.5 0.25 0 0 0</pose>
+    </model>
+    <model name="krail_2">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.0 0.15 0.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.0 0.15 0.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.7 1</ambient></material>
+        </visual>
+      </link>
+      <pose>3.0 -0.5 0.25 0 0 0</pose>
+    </model>
+
+    <!-- ==================== Hurdles (pipes on floor) ==================== -->
+    <model name="hurdle_1">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.025</radius><length>0.6</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.025</radius><length>0.6</length></cylinder></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+      </link>
+      <pose>4.5 0 0.025 1.5708 0 0</pose>
+    </model>
+    <model name="hurdle_2">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.025</radius><length>0.6</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.025</radius><length>0.6</length></cylinder></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient></material>
+        </visual>
+      </link>
+      <pose>4.8 0 0.025 1.5708 0 0</pose>
+    </model>
+
+    <!-- ==================== Stairs (4 steps) ==================== -->
+    <model name="stair_1">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.3 0.6 0.10</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.3 0.6 0.10</size></box></geometry>
+          <material><ambient>0.5 0.5 0.5 1</ambient></material>
+        </visual>
+      </link>
+      <pose>5.5 -1.0 0.05 0 0 0</pose>
+    </model>
+    <model name="stair_2">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.3 0.6 0.10</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.3 0.6 0.10</size></box></geometry>
+          <material><ambient>0.5 0.5 0.5 1</ambient></material>
+        </visual>
+      </link>
+      <pose>5.8 -1.0 0.15 0 0 0</pose>
+    </model>
+    <model name="stair_3">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.3 0.6 0.10</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.3 0.6 0.10</size></box></geometry>
+          <material><ambient>0.5 0.5 0.5 1</ambient></material>
+        </visual>
+      </link>
+      <pose>6.1 -1.0 0.25 0 0 0</pose>
+    </model>
+    <model name="stair_4">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.3 0.6 0.10</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.3 0.6 0.10</size></box></geometry>
+          <material><ambient>0.5 0.5 0.5 1</ambient></material>
+        </visual>
+      </link>
+      <pose>6.4 -1.0 0.35 0 0 0</pose>
+    </model>
+
+    <!-- ==================== Labyrinth (2x2m, 8 wall segments) ==================== -->
+    <model name="lab_wall_1">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>2.0 0.05 0.3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>2.0 0.05 0.3</size></box></geometry>
+          <material><ambient>0.35 0.25 0.2 1</ambient></material>
+        </visual>
+      </link>
+      <pose>7.0 1.0 0.15 0 0 0</pose>
+    </model>
+    <model name="lab_wall_2">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>2.0 0.05 0.3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>2.0 0.05 0.3</size></box></geometry>
+          <material><ambient>0.35 0.25 0.2 1</ambient></material>
+        </visual>
+      </link>
+      <pose>7.0 -1.0 0.15 0 0 0</pose>
+    </model>
+    <model name="lab_wall_3">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.05 2.0 0.3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.05 2.0 0.3</size></box></geometry>
+          <material><ambient>0.35 0.25 0.2 1</ambient></material>
+        </visual>
+      </link>
+      <pose>6.0 0 0.15 0 0 0</pose>
+    </model>
+    <!-- Internal labyrinth walls -->
+    <model name="lab_internal_1">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.8 0.05 0.3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.8 0.05 0.3</size></box></geometry>
+          <material><ambient>0.35 0.25 0.2 1</ambient></material>
+        </visual>
+      </link>
+      <pose>6.5 0 0.15 0 0 0</pose>
+    </model>
+    <model name="lab_internal_2">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.05 0.8 0.3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.05 0.8 0.3</size></box></geometry>
+          <material><ambient>0.35 0.25 0.2 1</ambient></material>
+        </visual>
+      </link>
+      <pose>7.0 0.5 0.15 0 0 0</pose>
+    </model>
+    <model name="lab_internal_3">
+      <static>true</static>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.6 0.05 0.3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.6 0.05 0.3</size></box></geometry>
+          <material><ambient>0.35 0.25 0.2 1</ambient></material>
+        </visual>
+      </link>
+      <pose>7.3 -0.5 0.15 0 0 0</pose>
+    </model>
+
+  </world>
+</sdf>

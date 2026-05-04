@@ -18,6 +18,7 @@ Features:
 """
 
 import time
+import math
 import threading
 import json
 import os
@@ -43,16 +44,18 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'shared')
 
 try:
     from shared.constants import (
-        JETSON_IP, ZMQ_PORT_DRIVE, 
+        JETSON_IP, ZMQ_PORT_DRIVE, ZMQ_PORT_LIDAR,
         JOYSTICK_DEADZONE, MAX_DRIVE_SPEED,
-        DRIVE_CONTROL_HZ
+        DRIVE_CONTROL_HZ, LIDAR_OBSTACLE_STOP_M
     )
 except ImportError:
     JETSON_IP = "192.168.1.1"
     ZMQ_PORT_DRIVE = 5555
+    ZMQ_PORT_LIDAR = 5563
     JOYSTICK_DEADZONE = 0.05
     MAX_DRIVE_SPEED = 100
     DRIVE_CONTROL_HZ = 50
+    LIDAR_OBSTACLE_STOP_M = 0.15
 
 
 # =============================================================================
@@ -76,8 +79,8 @@ class JoystickConfig:
     # Deadzone (0.0 - 1.0)
     deadzone: float = 0.08
     
-    # Sensitivity curve exponent (1.0 = linear, 2.0 = quadratic)
-    curve_exponent: float = 1.5
+    # Sensitivity curve exponent (1.0 = linear, 2.0 = quadratic/expo)
+    curve_exponent: float = 2.0
     
     # Button indices
     button_emergency_stop: int = 0   # Trigger or button 1
@@ -135,6 +138,11 @@ class JoystickHandler:
         self.on_button_press: Optional[Callable[[JoystickButton], None]] = None
         self.on_button_release: Optional[Callable[[JoystickButton], None]] = None
         self.on_drive_command: Optional[Callable[[int, int, int], None]] = None
+        
+        # LiDAR obstacle stop
+        self.lidar_socket: Optional[zmq.Socket] = None
+        self.lidar_front_min_range = float('inf')  # minimum range in front sector
+        self.obstacle_stop_active = False
         
         # Statistics
         self.cmd_count = 0
@@ -216,6 +224,18 @@ class JoystickHandler:
             except Exception as e:
                 print(f"[JOYSTICK] ZMQ connection failed: {e}")
                 self.connected = False
+            
+            # Subscribe to LiDAR for soft obstacle stop
+            try:
+                self.lidar_socket = self.zmq_context.socket(zmq.SUB)
+                self.lidar_socket.setsockopt(zmq.SUBSCRIBE, b"")
+                self.lidar_socket.setsockopt(zmq.RCVTIMEO, 5)
+                self.lidar_socket.setsockopt(zmq.CONFLATE, 1)  # Only latest
+                self.lidar_socket.connect(f"tcp://{self.jetson_ip}:{ZMQ_PORT_LIDAR}")
+                print(f"[JOYSTICK] LiDAR obstacle stop enabled (threshold: {LIDAR_OBSTACLE_STOP_M}m)")
+            except Exception as e:
+                print(f"[JOYSTICK] LiDAR subscribe failed (obstacle stop disabled): {e}")
+                self.lidar_socket = None
         
         return True
     
@@ -227,6 +247,9 @@ class JoystickHandler:
             # Send stop command before disconnecting
             self._send_drive_command(0, 0, 0, emergency_stop=True)
             self.zmq_socket.close()
+        
+        if self.lidar_socket:
+            self.lidar_socket.close()
         
         if self.zmq_context:
             self.zmq_context.term()
@@ -320,6 +343,18 @@ class JoystickHandler:
         drive_x = int(x * self.current_speed_limit)
         drive_z = int(z * self.current_speed_limit)
         
+        # Soft obstacle stop: if LiDAR sees obstacle < threshold in front, block forward
+        self._update_lidar()
+        if drive_y > 0 and self.lidar_front_min_range < LIDAR_OBSTACLE_STOP_M:
+            if not self.obstacle_stop_active:
+                print(f"[JOYSTICK] OBSTACLE STOP - object at {self.lidar_front_min_range:.2f}m")
+                self.obstacle_stop_active = True
+            drive_y = 0
+        else:
+            if self.obstacle_stop_active:
+                print("[JOYSTICK] Obstacle clear")
+            self.obstacle_stop_active = False
+        
         # Send drive command
         self._send_drive_command(drive_y, drive_x, drive_z)
         
@@ -369,6 +404,26 @@ class JoystickHandler:
         if button == JoystickButton.SPEED_BOOST:
             self.current_speed_limit = self.config.normal_speed
             print(f"[JOYSTICK] Normal speed: {self.current_speed_limit}%")
+    
+    def _update_lidar(self):
+        """Read latest LiDAR scan and compute minimum range in front sector (-30 to +30 deg)."""
+        if not self.lidar_socket:
+            return
+        try:
+            msg = self.lidar_socket.recv_json(zmq.NOBLOCK)
+            ranges = msg.get("ranges", [])
+            angles = msg.get("angles", [])
+            if ranges and angles:
+                min_r = float('inf')
+                for r, a in zip(ranges, angles):
+                    # Normalize angle to -pi..pi
+                    a_norm = a if a <= math.pi else a - 2 * math.pi
+                    # Front sector: -30 to +30 degrees
+                    if abs(a_norm) <= math.radians(30) and r > 0.02:
+                        min_r = min(min_r, r)
+                self.lidar_front_min_range = min_r
+        except Exception:
+            pass  # No new data, keep last value
     
     def _send_drive_command(self, y: int, x: int, z: int, emergency_stop: bool = False):
         """Send drive command via ZMQ."""

@@ -47,7 +47,15 @@ PICO_SERIAL_BAUD = 115200
 
 # SO-ARM101 serial port on Jetson (Feetech servo bus)
 ARM_SERIAL_PORT = "/dev/ttyACM1"  # Adjust based on actual connection
-# 1 DOF back support (kickstand) servo: ID 7 on same bus. 0–1023 (calibrate on robot).
+# Back support (kickstand) servos on the same Feetech bus.
+# After the May 2026 hardware change, two servos (IDs 7 + 8) are wired in
+# parallel for additional torque, both mounted in the SAME orientation so they
+# share an identical target position. To invert one of them mechanically,
+# add its index to BACK_SUPPORT_SERVO_INVERTED.
+BACK_SUPPORT_SERVO_IDS = (7, 8)
+BACK_SUPPORT_SERVO_INVERTED = (False, False)
+# Legacy single-servo alias kept for code paths that reference one ID directly.
+BACK_SUPPORT_SERVO_ID = BACK_SUPPORT_SERVO_IDS[0]
 BACK_SUPPORT_DOWN = 150    # Stowed (safe mechanical minimum)
 BACK_SUPPORT_UP = 1820     # Deployed (prevent tipping backward)
 BACK_SUPPORT_STEP = 60     # Increment per button press (raise/lower, not jump to min/max)
@@ -124,6 +132,9 @@ STATUS_UPDATE_HZ = 10
 
 # Watchdog timeout (ms)
 WATCHDOG_TIMEOUT_MS = 500
+
+# LiDAR soft obstacle stop distance (meters)
+LIDAR_OBSTACLE_STOP_M = 0.15
 
 # =============================================================================
 # YOLO CONFIGURATION
@@ -230,9 +241,30 @@ POINTS_KEYPAD_5_CLEAN = 3
 POINTS_KEYPAD_5_DIRTY = 1
 POINTS_OBJECT_REMOVED = 1
 POINTS_OBJECT_IN_CONTAINER = 2
+# Drop test (finals only)
+POINTS_DROP_15 = 1
+POINTS_DROP_30 = 2
 
 # Autonomy multiplier
 AUTONOMY_MULTIPLIER = 4
+
+# Dexterity autonomy 30 cm guard (rulebook changelog 2026-04-12).
+# Robot must be at least this distance from the target object before an autonomous
+# dexterity behavior is accepted, otherwise the 4x multiplier is voided.
+DEXTERITY_AUTONOMY_MIN_DIST_M = 0.30
+
+# Best-in-Class breadth target (rulebook): need positive non-zero score in >=80%
+# of available tests (>=15 of 18) to be eligible for any Best-in-Class certificate.
+BIC_BREADTH_TARGET = 0.80
+
+# Tether mode default. Override via USE_TETHER_MODE=1 env var on Jetson startup.
+TETHER_MODE_DEFAULT = False
+
+# Snapshot zero-false-positive gating (Sensor Cabinet HAZMAT/Landolt autonomy).
+# A claim is only made if the same class/direction is seen in N consecutive frames
+# at >= SNAPSHOT_MIN_CONFIDENCE.
+SNAPSHOT_FRAME_CONSISTENCY_N = 3
+SNAPSHOT_MIN_CONFIDENCE = 0.75
 
 # Stowed posture (RMRC: required for autonomy bonus)
 # Operator must confirm robot is stowed before starting Sensor Cabinet / Keypad autonomy
@@ -302,5 +334,4 @@ LINEAR_RAIL_PICK_MODES = [
 NAV2_MAX_LINEAR_VEL_MPS = 0.3   # m/s — maps to ~100% motor when scaling cmd_vel
 NAV2_MAX_ANGULAR_VEL_RPS = 1.0  # rad/s
 NAV2_STUCK_TIMEOUT_S = 15       # Auto ABORT if Nav2 no progress
-BATTERY_WARNING_V = 11.8        # Slow down / warning below this
 END_WALL_EXCEPTION_M = 0.30     # Rulebook: joystick allowed within 30 cm of end walls

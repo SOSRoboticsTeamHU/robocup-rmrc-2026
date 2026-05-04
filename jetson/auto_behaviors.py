@@ -196,6 +196,59 @@ def stuck_detect(
     return dist < min_dist_m
 
 
+# -----------------------------------------------------------------------------
+# Stuck recovery
+# -----------------------------------------------------------------------------
+
+# Phase durations (seconds)
+_RECOVERY_REVERSE_S = 1.5
+_RECOVERY_TURN_S = 1.0
+_RECOVERY_FORWARD_S = 0.8
+_RECOVERY_REVERSE_MPS = -0.08
+_RECOVERY_TURN_RPS = 0.5
+_RECOVERY_FORWARD_MPS = 0.10
+
+
+def recover_from_stuck(
+    phase: int,
+    elapsed_in_phase: float,
+    attempt_number: int = 0,
+) -> Tuple[float, float, int]:
+    """
+    3-phase stuck recovery. Call every control tick with current phase and
+    time spent in it.
+
+    Phase 0: Reverse  (-0.08 m/s, 1.5 s)
+    Phase 1: Turn     (+/-0.5 rad/s, 1.0 s, alternates direction each attempt)
+    Phase 2: Forward  (+0.10 m/s, 0.8 s)
+
+    Returns (linear_mps, angular_rps, next_phase).
+    next_phase == 3 means recovery sequence is done.
+    """
+    # Alternate turn direction on odd attempts
+    turn_sign = 1.0 if (attempt_number % 2 == 0) else -1.0
+
+    if phase == 0:
+        if elapsed_in_phase >= _RECOVERY_REVERSE_S:
+            return 0.0, 0.0, 1  # transition to turn
+        return _RECOVERY_REVERSE_MPS, 0.0, 0
+    elif phase == 1:
+        if elapsed_in_phase >= _RECOVERY_TURN_S:
+            return 0.0, 0.0, 2  # transition to forward
+        return 0.0, turn_sign * _RECOVERY_TURN_RPS, 1
+    elif phase == 2:
+        if elapsed_in_phase >= _RECOVERY_FORWARD_S:
+            return 0.0, 0.0, 3  # done
+        return _RECOVERY_FORWARD_MPS, 0.0, 2
+    else:
+        return 0.0, 0.0, 3  # already done
+
+
+def recovery_total_duration() -> float:
+    """Total time for one full recovery sequence."""
+    return _RECOVERY_REVERSE_S + _RECOVERY_TURN_S + _RECOVERY_FORWARD_S
+
+
 def ema_filter(
     current: float,
     previous_ema: Optional[float],

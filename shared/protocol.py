@@ -47,6 +47,7 @@ class MessageType(str, Enum):
     HEARTBEAT = "heartbeat"
     ERROR = "error"
     STATUS = "status"
+    MISSION_RESET = "mission_reset"  # Operator-initiated mini-mission reset (rulebook 2.5)
 
 # =============================================================================
 # BASE MESSAGE
@@ -285,11 +286,24 @@ class ErrorMessage(BaseMessage):
     recoverable: bool = True
 
 @dataclass
+class MissionReset(BaseMessage):
+    """Mini-mission reset broadcast (rulebook 2.5).
+
+    Sent by the operator GUI on the autonomy port (5560). All long-lived nodes
+    subscribe and clear their in-mission state when received.
+    """
+    msg_type: str = MessageType.MISSION_RESET
+    mission_id: str = ""
+    mini_mission_index: int = 0
+    reason: str = ""
+    # Convenience field so existing autonomy_executor handle_command() also accepts it
+    mode: str = "reset"
+
+
+@dataclass
 class RobotStatus(BaseMessage):
     """Overall robot status."""
     msg_type: str = MessageType.STATUS
-    battery_voltage: float = 0
-    battery_percent: float = 0
     cpu_temp: float = 0
     gpu_temp: float = 0
     cpu_usage: float = 0
@@ -324,6 +338,7 @@ MESSAGE_CLASSES = {
     MessageType.HEARTBEAT: Heartbeat,
     MessageType.ERROR: ErrorMessage,
     MessageType.STATUS: RobotStatus,
+    MessageType.MISSION_RESET: MissionReset,
 }
 
 def parse_message(json_str: str) -> BaseMessage:

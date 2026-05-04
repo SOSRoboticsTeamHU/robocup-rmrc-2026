@@ -12,6 +12,7 @@ Features:
 - Task-based runtime switching
 """
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -51,26 +52,107 @@ MODEL_PATTERNS = {
     "landolt": ["landolt_yolo11n.engine", "landolt_yolo11n.pt", "landolt_yolov8n.engine", "landolt_best.engine", "landolt_yolov8n.pt"],
 }
 
+# Default HAZMAT class map (overridden by jetson/models/engines/hazmat_class_map.json).
+# Maps raw training-class names (lowercase) to canonical RMRC rulebook HAZMAT_LABELS.
+_DEFAULT_HAZMAT_RENAME = {
+    "poison": "Poison",
+    "oxygen": "Oxygen",
+    "flammable": "Flammable Liquid",
+    "flammable-solid": "Flammable Solid",
+    "corrosive": "Corrosive",
+    "dangerous": "Miscellaneous Dangerous Goods",
+    "non-flammable-gas": "Non-Flammable Gas",
+    "organic-peroxide": "Organic Peroxide",
+    "explosive": "Explosive",
+    "radioactive": "Radioactive",
+    "inhalation-hazard": "Poison",
+    "spontaneously-combustible": "Spontaneously Combustible",
+    "infectious-substance": "Miscellaneous Dangerous Goods",
+}
 
-def _run_model(model, frame, conf, max_det, imgsz, iou, source_tag: str, exclude_classes: set = None) -> list:
-    """Run a YOLO model and return detections with source tag."""
+
+def load_hazmat_class_map(models_dir: Path) -> Dict[str, Any]:
+    """Load hazmat_class_map.json from models_dir if present, else defaults.
+
+    Returned dict has keys:
+      - rename: {raw_lower: canonical}
+      - drop_classes: set of lowered raw names to drop unconditionally
+      - min_confidence: float (global HAZMAT confidence floor)
+      - min_confidence_per_class: {raw_lower: float}
+    """
+    cfg = {
+        "rename": dict(_DEFAULT_HAZMAT_RENAME),
+        "drop_classes": set(),
+        "min_confidence": 0.65,
+        "min_confidence_per_class": {},
+    }
+    try:
+        path = Path(models_dir) / "hazmat_class_map.json"
+        if not path.exists():
+            return cfg
+        with open(path, "r", encoding="utf-8") as f:
+            raw = json.load(f) or {}
+        rename = raw.get("rename") or {}
+        if isinstance(rename, dict):
+            cfg["rename"] = {str(k).lower(): str(v) for k, v in rename.items()}
+        drop = raw.get("drop_classes") or []
+        if isinstance(drop, list):
+            cfg["drop_classes"] = {str(x).lower() for x in drop}
+        try:
+            cfg["min_confidence"] = float(raw.get("min_confidence", cfg["min_confidence"]))
+        except (TypeError, ValueError):
+            pass
+        per_cls = raw.get("min_confidence_per_class") or {}
+        if isinstance(per_cls, dict):
+            cfg["min_confidence_per_class"] = {
+                str(k).lower(): float(v) for k, v in per_cls.items()
+                if isinstance(v, (int, float))
+            }
+    except Exception as e:
+        print(f"[YOLO11] hazmat_class_map.json parse error: {e}; using defaults")
+    return cfg
+
+
+def _run_model(model, frame, conf, max_det, imgsz, iou, source_tag: str, exclude_classes: set = None,
+               class_map: Optional[Dict[str, Any]] = None) -> list:
+    """Run a YOLO model and return detections with source tag.
+
+    When ``class_map`` is provided (HAZMAT path), apply:
+      - drop classes in ``drop_classes``
+      - per-class confidence floor (e.g. "dangerous" needs >= 0.85)
+      - rename raw class -> rulebook HAZMAT_LABELS
+    """
     if model is None or frame is None:
         return []
     try:
         results = model(frame, conf=conf, iou=iou, verbose=False, max_det=max_det, imgsz=imgsz)
         out = []
+        rename = (class_map or {}).get("rename", {})
+        drop_classes = (class_map or {}).get("drop_classes", set())
+        per_cls_conf = (class_map or {}).get("min_confidence_per_class", {})
         for r in results:
             if r.boxes is None:
                 continue
             for box in r.boxes:
                 cls_id = int(box.cls[0])
-                class_name = r.names.get(cls_id, f"class_{cls_id}")
-                if exclude_classes and class_name.lower() in exclude_classes:
+                raw_name = r.names.get(cls_id, f"class_{cls_id}")
+                raw_lower = raw_name.lower()
+                if exclude_classes and raw_lower in exclude_classes:
                     continue
+                if raw_lower in drop_classes:
+                    continue
+                conf_val = float(box.conf[0])
+                if raw_lower in per_cls_conf and conf_val < per_cls_conf[raw_lower]:
+                    # Bias against generic / weak HAZMAT classes that the rulebook
+                    # treats as a single "Miscellaneous Dangerous Goods" point.
+                    continue
+                # Apply rulebook-aligned canonical name (HAZMAT path only).
+                final_name = rename.get(raw_lower, raw_name) if class_map else raw_name
                 out.append({
                     "class_id": cls_id,
-                    "class_name": class_name,
-                    "confidence": round(float(box.conf[0]), 3),
+                    "class_name": final_name,
+                    "raw_class_name": raw_name,
+                    "confidence": round(conf_val, 3),
                     "bbox": list(map(int, box.xyxy[0].tolist())),
                     "center": [
                         (int(box.xyxy[0][0]) + int(box.xyxy[0][2])) // 2,
@@ -105,6 +187,8 @@ class YOLO11Processor:
         self._landolt_model = None
         self.ready = False
         self.combined_ready = False
+        # HAZMAT class map: filters generic classes and remaps to rulebook labels.
+        self.hazmat_class_map = load_hazmat_class_map(self.models_dir)
         self._discover_models()
         self._load_combined_models()
         if not self.combined_ready:
@@ -170,9 +254,29 @@ class YOLO11Processor:
         max_det = max_det if max_det is not None else self.config.max_detections
         imgsz, iou = self.config.imgsz, self.config.iou_threshold
 
+        # HAZMAT uses a higher confidence floor than the generic config to
+        # avoid false positives on the rulebook "single still + zero false
+        # positives" autonomy claim. Per-class floor (e.g. for "dangerous")
+        # is applied inside _run_model.
+        hazmat_conf = max(
+            float(conf),
+            float(self.hazmat_class_map.get("min_confidence", conf)),
+        )
+
         all_detections = []
         if self._hazmat_model:
-            all_detections.extend(_run_model(self._hazmat_model, frame, conf, max_det, imgsz, iou, "hazmat"))
+            all_detections.extend(
+                _run_model(
+                    self._hazmat_model,
+                    frame,
+                    hazmat_conf,
+                    max_det,
+                    imgsz,
+                    iou,
+                    "hazmat",
+                    class_map=self.hazmat_class_map,
+                )
+            )
         if self._landolt_model:
             all_detections.extend(_run_model(self._landolt_model, frame, conf, max_det, imgsz, iou, "landolt", exclude_classes={"person"}))
 

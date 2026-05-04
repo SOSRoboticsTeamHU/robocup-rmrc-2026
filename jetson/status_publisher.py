@@ -47,7 +47,6 @@ class StatusPublisher:
             "cameras_active": 0,
             "left_speed": 0,
             "right_speed": 0,
-            "battery_voltage": 0,
             "cpu_temp": 0,
             "gpu_temp": 0,
             "uptime": 0,

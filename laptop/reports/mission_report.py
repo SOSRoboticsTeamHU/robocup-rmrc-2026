@@ -6,8 +6,10 @@ Generates PDF report after missions: laps, QR counts, detections, points.
 Uses reportlab for PDF output.
 """
 
+import json
 import os
 import sys
+import math
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
@@ -22,6 +24,8 @@ try:
         POINTS_HAZMAT, POINTS_LANDOLT, POINTS_OBJECT_REMOVED, POINTS_OBJECT_IN_CONTAINER,
         POINTS_KEYPAD_5_CLEAN, POINTS_KEYPAD_5_DIRTY,
         AUTONOMY_MULTIPLIER,
+        QR_MAP_VALIDATION_DISTANCE_M,
+        FIDUCIAL_POSITIONS,
     )
 except ImportError:
     MISSION_DURATION = 300
@@ -31,6 +35,8 @@ except ImportError:
     POINTS_OBJECT_REMOVED, POINTS_OBJECT_IN_CONTAINER = 1, 2
     POINTS_KEYPAD_5_CLEAN, POINTS_KEYPAD_5_DIRTY = 3, 1
     AUTONOMY_MULTIPLIER = 4
+    QR_MAP_VALIDATION_DISTANCE_M = 0.30
+    FIDUCIAL_POSITIONS = []
 
 try:
     from reportlab.lib import colors
@@ -109,7 +115,8 @@ def _compute_points_by_test_type(test_type: str, data: Dict[str, Any]) -> tuple:
     # Labyrinth: QR + QR mapped
     elif test_type in ("labyrinth_flat", "labyrinth_krails"):
         teleop = data.get("qr_read_count", 0) * POINTS_QR_READ
-        auto = data.get("qr_mapped_count", 0) * POINTS_QR_MAPPED
+        mapped_valid = data.get("qr_mapped_valid_count", data.get("qr_mapped_count", 0))
+        auto = mapped_valid * POINTS_QR_MAPPED
     # Drop Test
     elif test_type == "drop_test":
         teleop = data.get("drop_15", 0) * 1 + data.get("drop_30", 0) * 2
@@ -129,6 +136,76 @@ def _compute_points_by_test_type(test_type: str, data: Dict[str, Any]) -> tuple:
     return teleop, auto
 
 
+def _load_fiducials_for_validation() -> List[List[float]]:
+    """Load fiducials from shared constants or reports/fiducials.json."""
+    fiducials = []
+    if isinstance(FIDUCIAL_POSITIONS, list):
+        for p in FIDUCIAL_POSITIONS:
+            if isinstance(p, (list, tuple)) and len(p) >= 2:
+                try:
+                    fiducials.append([float(p[0]), float(p[1])])
+                except (TypeError, ValueError):
+                    pass
+    if len(fiducials) >= 2:
+        return fiducials
+    # Fallback: local reports/fiducials.json
+    try:
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        path = os.path.join(repo_root, "reports", "fiducials.json")
+        if os.path.isfile(path):
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                out = []
+                for p in data:
+                    if isinstance(p, (list, tuple)) and len(p) >= 2:
+                        out.append([float(p[0]), float(p[1])])
+                if len(out) >= 2:
+                    return out
+    except Exception:
+        pass
+    return fiducials
+
+
+def _annotate_qr_map_validation(
+    qr_entries: List[Dict[str, Any]],
+    fiducials: List[List[float]],
+    threshold_m: float,
+) -> tuple:
+    """Annotate qr entries with d1/d2 fiducial distances and validity."""
+    annotated = []
+    valid_count = 0
+    raw_mapped_count = 0
+    for entry in qr_entries:
+        row = dict(entry) if isinstance(entry, dict) else {"data": str(entry)}
+        mx = row.get("map_x")
+        my = row.get("map_y")
+        row["map_valid"] = False
+        row["map_d1"] = None
+        row["map_d2"] = None
+        if mx is None or my is None:
+            annotated.append(row)
+            continue
+        raw_mapped_count += 1
+        try:
+            mx_f = float(mx)
+            my_f = float(my)
+        except (TypeError, ValueError):
+            annotated.append(row)
+            continue
+        if len(fiducials) >= 2:
+            dists = sorted(math.hypot(mx_f - fx, my_f - fy) for fx, fy in fiducials)
+            d1 = dists[0]
+            d2 = dists[1]
+            row["map_d1"] = d1
+            row["map_d2"] = d2
+            row["map_valid"] = (d1 <= threshold_m and d2 <= threshold_m)
+            if row["map_valid"]:
+                valid_count += 1
+        annotated.append(row)
+    return annotated, raw_mapped_count, valid_count
+
+
 def _compute_points(data: Dict[str, Any]) -> tuple:
     """Compute teleop and autonomy points. Returns (teleop_total, auto_total, total).
     POINTS_LAP_AUTO/POINTS_QR_MAPPED already include the 4× autonomy multiplier,
@@ -143,7 +220,7 @@ def _compute_points(data: Dict[str, Any]) -> tuple:
     )
     auto = (
         data.get("laps_auto", 0) * POINTS_LAP_AUTO
-        + data.get("qr_mapped_count", 0) * POINTS_QR_MAPPED
+        + data.get("qr_mapped_valid_count", data.get("qr_mapped_count", 0)) * POINTS_QR_MAPPED
         + data.get("objects_in_container", 0) * POINTS_OBJECT_IN_CONTAINER
     )
     total = teleop + auto
@@ -169,6 +246,17 @@ def generate_mission_report(
     if mission_data:
         data.update(mission_data)
     data.update(kwargs)
+    qr_entries = data.get("qr_entries") or []
+    fiducials = _load_fiducials_for_validation()
+    qr_entries_annotated, qr_mapped_raw_count, qr_mapped_valid_count = _annotate_qr_map_validation(
+        qr_entries,
+        fiducials,
+        float(QR_MAP_VALIDATION_DISTANCE_M),
+    )
+    data["qr_entries"] = qr_entries_annotated
+    data["qr_mapped_count"] = int(data.get("qr_mapped_count", qr_mapped_raw_count))
+    data["qr_mapped_raw_count"] = qr_mapped_raw_count
+    data["qr_mapped_valid_count"] = qr_mapped_valid_count
 
     try:
         doc = SimpleDocTemplate(
@@ -217,7 +305,8 @@ def generate_mission_report(
             ["Laps (teleop)", str(data["laps_teleop"])],
             ["Laps (autonomy)", str(data["laps_auto"])],
             ["QR read", str(data["qr_read_count"])],
-            ["QR mapped", str(data["qr_mapped_count"])],
+            ["QR mapped (raw pose-tagged)", str(data.get("qr_mapped_raw_count", data["qr_mapped_count"]))],
+            [f"QR mapped validated (<= {QR_MAP_VALIDATION_DISTANCE_M:.2f} m to 2 fiducials)", str(data.get("qr_mapped_valid_count", 0))],
             ["Hazmat detections", str(data["hazmat_count"])],
             ["Landolt-C", str(data["landolt_count"])],
             ["Objects removed", str(data["objects_removed"])],
@@ -226,6 +315,7 @@ def generate_mission_report(
             ["Points (teleop)", str(teleop_pts)],
             ["Points (autonomy)", str(auto_pts)],
             ["Total points", str(total_pts)],
+            ["Breadth contribution (this test)", "YES" if float(total_pts) > 0.0 else "NO"],
         ]
         t = Table(summary_data, colWidths=[5 * cm, 5 * cm])
         t.setStyle(TableStyle([
@@ -297,31 +387,33 @@ def generate_mission_report(
             story.append(Spacer(1, 16))
 
         # QR-on-map: positions and optional 30 cm validation note (rulebook)
-        qr_mapped = data.get("qr_mapped_count", 0)
-        if qr_mapped > 0:
+        qr_mapped_raw = data.get("qr_mapped_raw_count", 0)
+        qr_mapped_valid = data.get("qr_mapped_valid_count", 0)
+        if qr_mapped_raw > 0:
             story.append(Paragraph("QR-on-map (4 pts each if within 30 cm of two closest fiducials)", h2_style))
             story.append(Paragraph(
-                f"Count: {qr_mapped}. Positions (robot pose when read) and fiducial distances below for judge verification.",
+                f"Raw mapped: {qr_mapped_raw}; validated: {qr_mapped_valid}. "
+                f"Only validated entries qualify for 4-point mapping bonus.",
                 styles["Normal"],
             ))
-            try:
-                from shared.constants import FIDUCIAL_POSITIONS
-                fiducials = FIDUCIAL_POSITIONS
-            except ImportError:
-                fiducials = []
             qr_with_pos = [e for e in qr_entries if isinstance(e, dict) and "map_x" in e and "map_y" in e]
             if qr_with_pos:
-                map_rows = [["#", "QR (short)", "map_x (m)", "map_y (m)", "d1 (m)", "d2 (m)"]]
+                map_rows = [["#", "QR (short)", "map_x (m)", "map_y (m)", "d1 (m)", "d2 (m)", "valid"]]
                 for i, row in enumerate(qr_with_pos, 1):
                     mx = row.get("map_x", 0)
                     my = row.get("map_y", 0)
-                    d1 = d2 = ""
-                    if fiducials and len(fiducials) >= 2:
-                        dists = sorted(((mx - fx) ** 2 + (my - fy) ** 2) ** 0.5 for fx, fy in fiducials)
-                        d1 = f"{dists[0]:.2f}" if dists else ""
-                        d2 = f"{dists[1]:.2f}" if len(dists) > 1 else ""
-                    map_rows.append([str(i), (row.get("data") or "")[:12], f"{mx:.2f}", f"{my:.2f}", d1, d2])
-                map_table = Table(map_rows, colWidths=[1 * cm, 3 * cm, 2 * cm, 2 * cm, 1.5 * cm, 1.5 * cm])
+                    d1 = row.get("map_d1")
+                    d2 = row.get("map_d2")
+                    map_rows.append([
+                        str(i),
+                        (row.get("data") or "")[:12],
+                        f"{mx:.2f}",
+                        f"{my:.2f}",
+                        f"{d1:.2f}" if isinstance(d1, (int, float)) else "—",
+                        f"{d2:.2f}" if isinstance(d2, (int, float)) else "—",
+                        "YES" if row.get("map_valid") else "NO",
+                    ])
+                map_table = Table(map_rows, colWidths=[1 * cm, 3 * cm, 2 * cm, 2 * cm, 1.5 * cm, 1.5 * cm, 1.2 * cm])
                 map_table.setStyle(TableStyle([
                     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0f3460")),
                     ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
@@ -329,6 +421,11 @@ def generate_mission_report(
                     ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#0f3460")),
                 ]))
                 story.append(map_table)
+            if len(fiducials) < 2:
+                story.append(Paragraph(
+                    "Note: Fewer than 2 fiducials are configured; QR mapping validation cannot be confirmed.",
+                    styles["Normal"],
+                ))
             story.append(Spacer(1, 16))
 
         if data.get("notes"):
@@ -346,11 +443,19 @@ def generate_mission_report(
                     f.write("RoboCupRescue RMRC 2026 - Scanned QR Codes\n")
                     f.write(f"Mission: {data.get('mission_id', '')} | Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
                     f.write("-" * 60 + "\n")
+                    f.write("idx\ttime\tcamera\tcontent\tmap_x\tmap_y\td1\td2\tvalid\n")
                     for i, entry in enumerate(qr_entries, 1):
                         row = entry if isinstance(entry, dict) else {}
                         mx = row.get("map_x")
                         my = row.get("map_y")
-                        pos = f"\t{mx:.3f}\t{my:.3f}" if mx is not None and my is not None else ""
+                        d1 = row.get("map_d1")
+                        d2 = row.get("map_d2")
+                        valid = row.get("map_valid", False)
+                        pos = ""
+                        if mx is not None and my is not None:
+                            pos = f"\t{mx:.3f}\t{my:.3f}"
+                            if isinstance(d1, (int, float)) and isinstance(d2, (int, float)):
+                                pos += f"\t{d1:.3f}\t{d2:.3f}\t{'YES' if valid else 'NO'}"
                         f.write(f"{i}\t{row.get('timestamp', '')}\t{row.get('camera_id', '')}\t{row.get('data', '')}{pos}\n")
             except Exception as e:
                 print(f"[REPORT] Could not write QR .txt: {e}")

@@ -1,0 +1,24 @@
+{
+  "_doc": "HAZMAT model class normalization. Edit this file to remap raw model class names to RMRC rulebook HAZMAT_LABELS. The vision node reads it on startup. Keys are case-insensitive; the engine model used here was trained on the 13 classes in jetson/deepstream/configs/hazmat_labels.txt.",
+  "min_confidence": 0.65,
+  "min_confidence_per_class": {
+    "dangerous": 0.85,
+    "miscellaneous dangerous goods": 0.85
+  },
+  "drop_classes": [],
+  "rename": {
+    "poison": "Poison",
+    "oxygen": "Oxygen",
+    "flammable": "Flammable Liquid",
+    "flammable-solid": "Flammable Solid",
+    "corrosive": "Corrosive",
+    "dangerous": "Miscellaneous Dangerous Goods",
+    "non-flammable-gas": "Non-Flammable Gas",
+    "organic-peroxide": "Organic Peroxide",
+    "explosive": "Explosive",
+    "radioactive": "Radioactive",
+    "inhalation-hazard": "Poison",
+    "spontaneously-combustible": "Spontaneously Combustible",
+    "infectious-substance": "Miscellaneous Dangerous Goods"
+  }
+}
